@@ -52,7 +52,7 @@
                             <span class="fw-bold">{{ category.replace('_', ' ').title() }}</span>
                             <div class="d-flex align-items-center">
                                 <div class="progress me-2" style="width: 100px; height: 8px;">
-                                    <div class="progress-bar {% if score >= 80 %}bg-success{% elif score >= 65 %}bg-primary{% elif score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ score }}%"></div>
+                                    <div class="progress-bar score-{{ 'high' if score >= 80 else 'good' if score >= 65 else 'medium' if score >= 50 else 'low' }}" style="width: {{ score }}%"></div>
                                 </div>
                                 <span class="fw-bold">{{ score }}/100</span>
                             </div>
@@ -274,6 +274,23 @@
         border: 1px solid #ddd !important;
         box-shadow: none !important;
     }
+}
+
+/* Conditional progress bar styling based on score classes */
+.progress-bar.score-high {
+    background-color: #198754; /* Green for scores 80+ */
+}
+
+.progress-bar.score-good {
+    background-color: #0d6efd; /* Blue for scores 65-79 */
+}
+
+.progress-bar.score-medium {
+    background-color: #ffc107; /* Yellow for scores 50-64 */
+}
+
+.progress-bar.score-low {
+    background-color: #dc3545; /* Red for scores below 50 */
 }
 </style>
 {% endblock %}
