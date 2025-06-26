@@ -231,6 +231,11 @@ class StockEvaluator:
                 print("Error generating summary:", e)
                 general_summary = "Summary unavailable."
 
+            # --- Data freshness logic ---
+            profile_freshness = company_profile.get('profile_freshness', 'fallback')
+            metrics_freshness = (metrics[0].get('metrics_freshness', 'fallback') if metrics and isinstance(metrics, list) and isinstance(metrics[0], dict) else 'fallback')
+            data_freshness = 'fresh' if profile_freshness == 'fresh' and metrics_freshness == 'fresh' else 'fallback'
+
             result = {
                 "ticker": ticker.upper(),
                 "company_name": company_name,
@@ -240,7 +245,8 @@ class StockEvaluator:
                 "explanation": explanation,
                 "general_summary": general_summary,
                 "evaluation_timestamp": datetime.now().isoformat(),
-                "data_sources": ["Financial Modeling Prep", "Google Gemini", "SERP API"]
+                "data_sources": ["Financial Modeling Prep", "Google Gemini", "SERP API"],
+                "data_freshness": data_freshness
             }
             
             # Add detailed analysis if requested
@@ -258,7 +264,9 @@ class StockEvaluator:
                         "recent_transactions": len(insider_trading),
                         "net_insider_buying": sum(1 for t in insider_trading if t.get('transactionType') == 'P-Purchase'),
                         "net_insider_selling": sum(1 for t in insider_trading if t.get('transactionType') == 'S-Sale')
-                    }
+                    },
+                    "profile_freshness": profile_freshness,
+                    "metrics_freshness": metrics_freshness
                 }
             
             return result
