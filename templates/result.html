@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ticker }} Analysis - Stock Evaluator Pro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-dark">
+                <i class="fas fa-chart-line text-primary me-2"></i>
+                {{ result.company_name }} ({{ result.ticker }})
+            </h2>
+            <p class="text-muted">
+                Analysis completed on {{ result.evaluation_timestamp }}
+            </p>
+        </div>
+
+        <!-- Overall Score -->
+        <div class="card mb-4">
+            <div class="card-body text-center p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="fw-bold mb-2">Overall Score</h3>
+                        <div class="display-4 fw-bold 
+                            {% if result.composite_score >= 80 %}text-success
+                            {% elif result.composite_score >= 65 %}text-primary
+                            {% elif result.composite_score >= 50 %}text-warning
+                            {% else %}text-danger{% endif %}">
+                            {{ "%.1f"|format(result.composite_score) }}/100
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 class="mb-2">Verdict</h4>
+                        <div class="badge 
+                            {% if result.verdict == '✅ Investable' %}bg-success
+                            {% elif result.verdict == '⚠️ Cautious' %}bg-warning
+                            {% elif result.verdict == '❌ Avoid' %}bg-danger
+                            {% else %}bg-secondary{% endif %} fs-5 px-3 py-2">
+                            {{ result.verdict }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Breakdown -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Score Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for category, score in result.score_breakdown.items() %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">{{ category.replace('_', ' ').title() }}</span>
+                            <div class="d-flex align-items-center">
+                                <div class="progress me-2" style="width: 100px; height: 8px;">
+                                    <div class="progress-bar 
+                                        {% if score >= 80 %}bg-success
+                                        {% elif score >= 65 %}bg-primary
+                                        {% elif score >= 50 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" 
+                                         style="width: {{ score }}%"></div>
+                                </div>
+                                <span class="fw-bold">{{ score }}/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    AI Analysis Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ result.explanation }}</p>
+            </div>
+        </div>
+
+        <!-- Detailed Analysis -->
+        {% if result.detailed_analysis %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-search-plus me-2"></i>
+                    Detailed Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for section, data in result.detailed_analysis.items() %}
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary">{{ section.replace('_', ' ').title() }}</h6>
+                    {% if data is mapping %}
+                        {% for key, value in data.items() %}
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <strong>{{ key.replace('_', ' ').title() }}:</strong>
+                            </div>
+                            <div class="col-md-6">
+                                {% if value is number %}
+                                    {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
+                                        {{ "%.2f"|format(value) }}
+                                    {% elif 'cagr' in key.lower() or 'margin' in key.lower() or 'roe' in key.lower() %}
+                                        {{ "%.1f"|format(value) }}%
+                                    {% else %}
+                                        {{ "{:,.0f}".format(value) }}
+                                    {% endif %}
+                                {% else %}
+                                    {{ value }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>{{ data }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Data Sources -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Data Sources
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for source in result.data_sources %}
+                    <div class="col-md-4 mb-2">
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-check-circle text-success me-1"></i>
+                            {{ source }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-center">
+            <a href="{{ url_for('evaluate') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-search me-2"></i>
+                Analyze Another Stock
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-print me-2"></i>
+                Print Report
+            </button>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="mt-4">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Disclaimer:</strong> This analysis is for informational purposes only and should not be considered as financial advice. 
+                Always conduct your own research and consult with a financial advisor before making investment decisions.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, .btn, .alert {
+        display: none !important;
+    }
+    
+    .main-content {
+        box-shadow: none !important;
+        background: white !important;
+    }
+    
+    .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %} 

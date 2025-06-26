@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluate Stock - Stock Evaluator Pro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-dark">
+                <i class="fas fa-search text-primary me-2"></i>
+                Stock Evaluation
+            </h2>
+            <p class="text-muted">
+                Enter a stock ticker and your API keys to get a comprehensive analysis
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST" id="evaluationForm">
+                    <!-- Stock Ticker -->
+                    <div class="mb-4">
+                        <label for="ticker" class="form-label fw-bold">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Stock Ticker Symbol
+                        </label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="ticker" 
+                               name="ticker" 
+                               placeholder="e.g., AAPL, MSFT, GOOGL"
+                               required
+                               maxlength="10"
+                               pattern="[A-Za-z]{1,10}"
+                               title="Please enter a valid stock ticker (1-10 letters)">
+                        <div class="form-text">
+                            Enter the stock ticker symbol you want to evaluate
+                        </div>
+                    </div>
+
+                    <!-- API Keys Section -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-key me-2"></i>
+                            API Keys
+                        </h5>
+                        <p class="text-muted small mb-3">
+                            Your API keys are used only for this evaluation and are never stored.
+                        </p>
+                        
+                        <!-- Financial Modeling Prep API Key -->
+                        <div class="mb-3">
+                            <label for="fmp_key" class="form-label">
+                                <i class="fas fa-chart-line text-primary me-2"></i>
+                                Financial Modeling Prep API Key
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="fmp_key" 
+                                   name="fmp_key" 
+                                   placeholder="Enter your FMP API key"
+                                   required>
+                            <div class="form-text">
+                                <a href="https://financialmodelingprep.com/developer/docs/" target="_blank">
+                                    <i class="fas fa-external-link-alt me-1"></i>
+                                    Get your API key here
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- SERP API Key -->
+                        <div class="mb-3">
+                            <label for="serp_key" class="form-label">
+                                <i class="fas fa-search text-success me-2"></i>
+                                SERP API Key
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="serp_key" 
+                                   name="serp_key" 
+                                   placeholder="Enter your SERP API key"
+                                   required>
+                            <div class="form-text">
+                                <a href="https://serpapi.com/" target="_blank">
+                                    <i class="fas fa-external-link-alt me-1"></i>
+                                    Get your API key here
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Google Gemini API Key -->
+                        <div class="mb-3">
+                            <label for="gemini_key" class="form-label">
+                                <i class="fas fa-robot text-warning me-2"></i>
+                                Google Gemini API Key
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="gemini_key" 
+                                   name="gemini_key" 
+                                   placeholder="Enter your Gemini API key"
+                                   required>
+                            <div class="form-text">
+                                <a href="https://ai.google.dev/" target="_blank">
+                                    <i class="fas fa-external-link-alt me-1"></i>
+                                    Get your API key here
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">
+                            <i class="fas fa-play me-2"></i>
+                            Start Evaluation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="row mt-4 g-3">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                        <h6>Analysis Time</h6>
+                        <p class="small text-muted mb-0">Usually takes 30-60 seconds</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                        <h6>Secure</h6>
+                        <p class="small text-muted mb-0">Your keys are never stored</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-bar fa-2x text-warning mb-2"></i>
+                        <h6>Comprehensive</h6>
+                        <p class="small text-muted mb-0">5-factor scoring system</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('evaluationForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    // Validate ticker format
+    const ticker = document.getElementById('ticker').value.toUpperCase();
+    if (!/^[A-Z]{1,10}$/.test(ticker)) {
+        alert('Please enter a valid stock ticker symbol (1-10 letters)');
+        e.preventDefault();
+        return;
+    }
+    
+    // Show loading state
+    showLoading(submitBtn);
+    
+    // Re-enable after 5 seconds in case of error
+    setTimeout(() => {
+        hideLoading(submitBtn, originalText);
+    }, 5000);
+});
+
+// Toggle password visibility
+document.querySelectorAll('input[type="password"]').forEach(input => {
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'btn btn-outline-secondary btn-sm position-absolute';
+    toggleBtn.style.right = '10px';
+    toggleBtn.style.top = '50%';
+    toggleBtn.style.transform = 'translateY(-50%)';
+    toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'position-relative';
+    input.parentNode.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+    wrapper.appendChild(toggleBtn);
+    
+    toggleBtn.addEventListener('click', function() {
+        if (input.type === 'password') {
+            input.type = 'text';
+            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+        } else {
+            input.type = 'password';
+            toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        }
+    });
+});
+</script>
+{% endblock %} 

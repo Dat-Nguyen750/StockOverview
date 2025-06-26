@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # Redis for caching and Celery
+  redis:
+    image: redis:7-alpine
+    container_name: stock-evaluator-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main API service
+  stock-evaluator-api:
+    build: .
+    container_name: stock-evaluator-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - FMP_API_KEY=${FMP_API_KEY}
+      - SERP_API_KEY=${SERP_API_KEY}
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
+      - FMP_RATE_LIMIT_PER_MINUTE=15
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=INFO
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - SENTRY_DSN=${SENTRY_DSN}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Celery worker for background tasks
+  celery-worker:
+    build: .
+    container_name: stock-evaluator-worker
+    command: celery -A modules.celery_app worker --loglevel=info
+    environment:
+      - ENVIRONMENT=production
+      - FMP_API_KEY=${FMP_API_KEY}
+      - SERP_API_KEY=${SERP_API_KEY}
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      - redis
+      - stock-evaluator-api
+    restart: unless-stopped
+
+  # Celery beat for scheduled tasks
+  celery-beat:
+    build: .
+    container_name: stock-evaluator-beat
+    command: celery -A modules.celery_app beat --loglevel=info
+    environment:
+      - ENVIRONMENT=production
+      - FMP_API_KEY=${FMP_API_KEY}
+      - SERP_API_KEY=${SERP_API_KEY}
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: stock-evaluator-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - stock-evaluator-api
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  redis_data:
+    driver: local 

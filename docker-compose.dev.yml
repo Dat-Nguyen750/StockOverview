@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # Redis for development
+  redis:
+    image: redis:7-alpine
+    container_name: stock-evaluator-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    restart: unless-stopped
+
+  # Main API service (development)
+  stock-evaluator-api:
+    build: .
+    container_name: stock-evaluator-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - FMP_API_KEY=${FMP_API_KEY}
+      - SERP_API_KEY=${SERP_API_KEY}
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
+      - FMP_RATE_LIMIT_PER_MINUTE=15
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=DEBUG
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  redis_data_dev:
+    driver: local 
