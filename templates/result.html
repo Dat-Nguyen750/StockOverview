@@ -140,38 +140,60 @@
                     {% if not data.scores and not data.details %}
                         {% if data is mapping %}
                             {% for key, value in data.items() %}
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <strong>{{ key.replace('_', ' ').title() }}:</strong>
-                                </div>
-                                <div class="col-md-6">
-                                    {% if value is number %}
-                                        {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
-                                            {{ "%.2f"|format(value) }}
-                                        {% elif 'cagr' in key.lower() or 'margin' in key.lower() or 'roe' in key.lower() %}
-                                            {{ "%.1f"|format(value) }}%
-                                        {% else %}
-                                            {{ "{:,.0f}".format(value) }}
-                                        {% endif %}
-                                    {% else %}
-                                        {{ value }}
-                                    {% endif %}
-                                </div>
+                            <div class="mb-3">
+                                <h6 class="text-secondary">{{ key.replace('_', ' ').title() }}:</h6>
+                                {% if value is string %}
+                                    <p class="mb-0">{{ value }}</p>
+                                {% elif value is number %}
+                                    <div class="d-flex justify-content-between">
+                                        <span>Value:</span>
+                                        <span class="fw-bold">
+                                            {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
+                                                {{ "%.2f"|format(value) }}
+                                            {% elif 'cagr' in key.lower() or 'margin' in key.lower() or 'roe' in key.lower() %}
+                                                {{ "%.1f"|format(value) }}%
+                                            {% else %}
+                                                {{ "{:,.0f}".format(value) }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                {% elif value is mapping %}
+                                    <div class="row">
+                                        {% for sub_key, sub_value in value.items() %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span>{{ sub_key.replace('_', ' ').title() }}:</span>
+                                                <span class="fw-bold">
+                                                    {% if sub_value is number %}
+                                                        {% if 'ratio' in sub_key.lower() or 'multiple' in sub_key.lower() %}
+                                                            {{ "%.2f"|format(sub_value) }}
+                                                        {% elif 'cagr' in sub_key.lower() or 'margin' in sub_key.lower() or 'roe' in sub_key.lower() %}
+                                                            {{ "%.1f"|format(sub_value) }}%
+                                                        {% else %}
+                                                            {{ "{:,.0f}".format(sub_value) }}
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {{ sub_value }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="mb-0">{{ value }}</p>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         {% elif data is iterable and data is not string %}
                             {% for item in data %}
-                            <div class="row mb-2">
-                                <div class="col-12">
-                                    {{ item }}
-                                </div>
+                            <div class="mb-2">
+                                <p class="mb-0">{{ item }}</p>
                             </div>
                             {% endfor %}
                         {% else %}
-                            <div class="row mb-2">
-                                <div class="col-12">
-                                    {{ data }}
-                                </div>
+                            <div class="mb-2">
+                                <p class="mb-0">{{ data }}</p>
                             </div>
                         {% endif %}
                     {% endif %}
