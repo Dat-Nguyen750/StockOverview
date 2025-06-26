@@ -77,6 +77,20 @@
         color: #495057;
     }
     
+    .analysis-content .section-label {
+        font-weight: 700;
+        color: #0d6efd;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .analysis-content .section-text {
+        margin-bottom: 1rem;
+        padding-left: 0.5rem;
+        border-left: 3px solid #e9ecef;
+    }
+    
     /* Improved spacing for key-value pairs */
     .key-value-grid {
         display: grid;
@@ -103,6 +117,55 @@
     }
     
     .key-value-content {
+        font-weight: 600;
+        color: #212529;
+        text-align: right;
+    }
+    
+    /* Key Metrics Table Styling */
+    .key-metrics-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        background: white;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .key-metrics-table th {
+        background: #0d6efd;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .key-metrics-table td {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    
+    .key-metrics-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+    
+    .key-metrics-table tr:hover {
+        background: #e9ecef;
+    }
+    
+    .key-metrics-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .metric-name {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .metric-value-cell {
         font-weight: 600;
         color: #212529;
         text-align: right;
@@ -283,8 +346,11 @@
                                         <!-- Handle long paragraphs - put in their own box -->
                                         {% if key.lower() in ['tam assessment', 'growth initiative', 'management quality', 'competitive moat', 'revenue model', 'industry position'] %}
                                             <div class="analysis-content">
-                                                {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
-                                                {{ formatted_text|safe }}
+                                                <span class="section-label">{{ key.replace('_', ' ').title() }}:</span>
+                                                <div class="section-text">
+                                                    {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
+                                                    {{ formatted_text|safe }}
+                                                </div>
                                             </div>
                                         {% else %}
                                             <!-- Handle markdown-like formatting for other content -->
@@ -307,29 +373,39 @@
                                     {% elif value is mapping %}
                                         <!-- Special handling for Key Metrics -->
                                         {% if key.lower() == 'key metrics' %}
-                                            <div class="key-metrics-grid">
-                                                {% for metric_name, metric_value in value.items() %}
-                                                <div class="metric-item">
-                                                    <div class="metric-label">{{ metric_name.replace('_', ' ').title() }}</div>
-                                                    <div class="metric-value">
-                                                        {% if metric_value is number %}
-                                                            {% if 'ratio' in metric_name.lower() or 'multiple' in metric_name.lower() or 'pe' in metric_name.lower() or 'pb' in metric_name.lower() or 'ps' in metric_name.lower() %}
-                                                                {{ "%.2f"|format(metric_value) }}
-                                                            {% elif 'yield' in metric_name.lower() or 'margin' in metric_name.lower() or 'roe' in metric_name.lower() or 'roic' in metric_name.lower() %}
-                                                                {{ "%.1f"|format(metric_value) }}%
-                                                            {% elif metric_value > 1000000 %}
-                                                                ${{ "{:,.1f}M".format(metric_value / 1000000) }}
-                                                            {% elif metric_value > 1000 %}
-                                                                ${{ "{:,.0f}K".format(metric_value / 1000) }}
-                                                            {% else %}
-                                                                ${{ "{:,.0f}".format(metric_value) }}
-                                                            {% endif %}
-                                                        {% else %}
-                                                            {{ metric_value }}
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                                {% endfor %}
+                                            <div class="key-metrics-table">
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Metric</th>
+                                                            <th>Value</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for metric_name, metric_value in value.items() %}
+                                                        <tr>
+                                                            <td class="metric-name">{{ metric_name.replace('_', ' ').title() }}</td>
+                                                            <td class="metric-value-cell">
+                                                                {% if metric_value is number %}
+                                                                    {% if 'ratio' in metric_name.lower() or 'multiple' in metric_name.lower() or 'pe' in metric_name.lower() or 'pb' in metric_name.lower() or 'ps' in metric_name.lower() %}
+                                                                        {{ "%.2f"|format(metric_value) }}
+                                                                    {% elif 'yield' in metric_name.lower() or 'margin' in metric_name.lower() or 'roe' in metric_name.lower() or 'roic' in metric_name.lower() %}
+                                                                        {{ "%.1f"|format(metric_value) }}%
+                                                                    {% elif metric_value > 1000000 %}
+                                                                        ${{ "{:,.1f}M".format(metric_value / 1000000) }}
+                                                                    {% elif metric_value > 1000 %}
+                                                                        ${{ "{:,.0f}K".format(metric_value / 1000) }}
+                                                                    {% else %}
+                                                                        ${{ "{:,.0f}".format(metric_value) }}
+                                                                    {% endif %}
+                                                                {% else %}
+                                                                    {{ metric_value }}
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         {% else %}
                                             <div class="key-value-grid">
