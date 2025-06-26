@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ ticker }} Analysis - Stock Evaluator Pro{% endblock %}
+{% block title %}{{ ticker }} Analysis - StockOverview{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -102,7 +102,55 @@
                 {% for section, data in result.detailed_analysis.items() %}
                 <div class="mb-4">
                     <h6 class="fw-bold text-primary">{{ section.replace('_', ' ').title() }}</h6>
-                    {% if data is mapping %}
+                    
+                    <!-- Handle Scores -->
+                    {% if data.scores %}
+                    <div class="mb-3">
+                        <h6 class="text-secondary">Scores:</h6>
+                        <div class="row">
+                            {% for metric, score in data.scores.items() %}
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ metric.replace('_', ' ').title() }}:</span>
+                                    <span class="fw-bold">{{ score }}/100</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Handle Details -->
+                    {% if data.details %}
+                    <div class="mb-3">
+                        <h6 class="text-secondary">Details:</h6>
+                        <div class="row">
+                            {% for metric, value in data.details.items() %}
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ metric.replace('_', ' ').title() }}:</span>
+                                    <span class="fw-bold">
+                                        {% if value is number %}
+                                            {% if 'ratio' in metric.lower() or 'multiple' in metric.lower() %}
+                                                {{ "%.2f"|format(value) }}
+                                            {% elif 'cagr' in metric.lower() or 'margin' in metric.lower() or 'roe' in metric.lower() %}
+                                                {{ "%.1f"|format(value) }}%
+                                            {% else %}
+                                                {{ "{:,.0f}".format(value) }}
+                                            {% endif %}
+                                        {% else %}
+                                            {{ value }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Handle simple key-value pairs -->
+                    {% if not data.scores and not data.details %}
                         {% for key, value in data.items() %}
                         <div class="row mb-2">
                             <div class="col-md-6">
@@ -123,8 +171,6 @@
                             </div>
                         </div>
                         {% endfor %}
-                    {% else %}
-                        <p>{{ data }}</p>
                     {% endif %}
                 </div>
                 {% endfor %}

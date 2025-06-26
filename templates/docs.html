@@ -1,36 +1,43 @@
 {% extends "base.html" %}
 
-{% block title %}API Documentation - Stock Evaluator Pro{% endblock %}
+{% block title %}API Documentation - StockOverview{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-10">
+        <!-- Header -->
         <div class="text-center mb-4">
             <h2 class="fw-bold text-dark">
                 <i class="fas fa-book text-primary me-2"></i>
                 API Documentation
             </h2>
             <p class="text-muted">
-                Integrate Stock Evaluator Pro into your applications
+                Programmatic access to StockOverview's stock analysis capabilities
             </p>
         </div>
 
-        <!-- Overview -->
+        <!-- API Overview -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fas fa-info-circle me-2"></i>
-                    Overview
+                    API Overview
                 </h5>
             </div>
             <div class="card-body">
                 <p>
-                    The Stock Evaluator Pro API allows you to programmatically evaluate stocks 
-                    using your own API keys. All evaluations are performed using your credentials 
-                    for complete privacy and control.
+                    StockOverview provides a RESTful API for programmatic stock analysis. 
+                    You can integrate our analysis capabilities into your own applications.
                 </p>
-                <div class="alert alert-info">
-                    <strong>Base URL:</strong> <code>{{ request.url_root.rstrip('/') }}</code>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Base URL</h6>
+                        <code>https://your-app-domain.com/api</code>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Rate Limit</h6>
+                        <code>5 requests per minute per IP</code>
+                    </div>
                 </div>
             </div>
         </div>
@@ -45,20 +52,17 @@
             </div>
             <div class="card-body">
                 <p>
-                    You need to provide your own API keys for the following services:
+                    API keys are passed in the request headers. You need to provide your own API keys for:
                 </p>
                 <ul>
-                    <li><strong>Financial Modeling Prep:</strong> For financial data and ratios</li>
-                    <li><strong>SERP API:</strong> For news sentiment and market analysis</li>
-                    <li><strong>Google Gemini:</strong> For AI-powered business insights</li>
+                    <li><strong>Financial Modeling Prep:</strong> <code>X-FMP-API-Key</code></li>
+                    <li><strong>SERP API:</strong> <code>X-SERP-API-Key</code></li>
+                    <li><strong>Google Gemini:</strong> <code>X-GEMINI-API-Key</code></li>
                 </ul>
-                <p class="text-muted">
-                    Your API keys are used only for the specific request and are never stored.
-                </p>
             </div>
         </div>
 
-        <!-- API Endpoints -->
+        <!-- Endpoints -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
@@ -69,8 +73,8 @@
             <div class="card-body">
                 <!-- Evaluate Endpoint -->
                 <div class="mb-4">
-                    <h6 class="fw-bold text-primary">POST /api/evaluate</h6>
-                    <p class="text-muted">Evaluate a stock for investment potential</p>
+                    <h6 class="text-primary">POST /api/evaluate</h6>
+                    <p class="text-muted">Analyze a stock and get comprehensive evaluation results.</p>
                     
                     <h6>Request Body:</h6>
                     <pre><code>{
@@ -85,31 +89,76 @@
                     <pre><code>{
   "ticker": "AAPL",
   "company_name": "Apple Inc.",
-  "score_breakdown": {
-    "financial_health": 84,
-    "business_fundamentals": 78,
-    "valuation": 70,
-    "growth_potential": 76,
-    "sentiment": 68
-  },
-  "composite_score": 75.6,
+  "composite_score": 85.5,
   "verdict": "✅ Investable",
-  "explanation": "Strong performance in financial health...",
-  "evaluation_timestamp": "2024-01-15T10:30:00",
-  "data_sources": ["Financial Modeling Prep", "Google Gemini", "SERP API"]
+  "score_breakdown": {
+    "financial_health": 82,
+    "valuation": 78,
+    "growth_potential": 88,
+    "market_sentiment": 85,
+    "risk_assessment": 80
+  },
+  "explanation": "Apple shows strong fundamentals...",
+  "detailed_analysis": {
+    "financial_details": {
+      "scores": {...},
+      "details": {...}
+    },
+    "valuation_details": {
+      "scores": {...},
+      "details": {...}
+    }
+  },
+  "data_sources": ["Financial Modeling Prep", "SERP API", "Google Gemini"],
+  "evaluation_timestamp": "2024-01-15T10:30:00Z"
 }</code></pre>
                 </div>
 
-                <!-- Health Endpoint -->
+                <!-- Health Check Endpoint -->
                 <div class="mb-4">
-                    <h6 class="fw-bold text-primary">GET /health</h6>
-                    <p class="text-muted">Check API health status</p>
+                    <h6 class="text-primary">GET /health</h6>
+                    <p class="text-muted">Check the health status of the API.</p>
                     
                     <h6>Response:</h6>
                     <pre><code>{
   "status": "healthy",
-  "api": "connected"
+  "api": "connected",
+  "timestamp": "2024-01-15T10:30:00Z"
 }</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Codes -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error Codes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-danger">400 - Bad Request</h6>
+                        <p class="small text-muted">Invalid request parameters or missing required fields.</p>
+                        
+                        <h6 class="text-danger">401 - Unauthorized</h6>
+                        <p class="small text-muted">Invalid or missing API keys.</p>
+                        
+                        <h6 class="text-danger">404 - Not Found</h6>
+                        <p class="small text-muted">Stock ticker not found or invalid.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">429 - Too Many Requests</h6>
+                        <p class="small text-muted">Rate limit exceeded. Try again later.</p>
+                        
+                        <h6 class="text-danger">500 - Internal Server Error</h6>
+                        <p class="small text-muted">Server error. Please try again.</p>
+                        
+                        <h6 class="text-danger">503 - Service Unavailable</h6>
+                        <p class="small text-muted">External API service unavailable.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -118,17 +167,20 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-laptop-code me-2"></i>
+                    <i class="fas fa-code me-2"></i>
                     Code Examples
                 </h5>
             </div>
             <div class="card-body">
                 <!-- Python Example -->
                 <div class="mb-4">
-                    <h6 class="fw-bold">Python</h6>
+                    <h6 class="text-primary">Python</h6>
                     <pre><code>import requests
 
-url = "{{ request.url_root.rstrip('/') }}/api/evaluate"
+url = "https://your-app-domain.com/api/evaluate"
+headers = {
+    "Content-Type": "application/json"
+}
 data = {
     "ticker": "AAPL",
     "fmp_api_key": "your_fmp_api_key",
@@ -137,43 +189,38 @@ data = {
     "include_detailed_analysis": True
 }
 
-response = requests.post(url, json=data)
+response = requests.post(url, json=data, headers=headers)
 result = response.json()
-
-print(f"Score: {result['composite_score']}/100")
+print(f"Score: {result['composite_score']}")
 print(f"Verdict: {result['verdict']}")</code></pre>
                 </div>
 
                 <!-- JavaScript Example -->
                 <div class="mb-4">
-                    <h6 class="fw-bold">JavaScript</h6>
-                    <pre><code>const url = "{{ request.url_root.rstrip('/') }}/api/evaluate";
-const data = {
-    ticker: "AAPL",
-    fmp_api_key: "your_fmp_api_key",
-    serp_api_key: "your_serp_api_key",
-    gemini_api_key: "your_gemini_api_key",
-    include_detailed_analysis: true
-};
-
-fetch(url, {
+                    <h6 class="text-primary">JavaScript</h6>
+                    <pre><code>const response = await fetch('https://your-app-domain.com/api/evaluate', {
     method: 'POST',
     headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
     },
-    body: JSON.stringify(data)
-})
-.then(response => response.json())
-.then(result => {
-    console.log(`Score: ${result.composite_score}/100`);
-    console.log(`Verdict: ${result.verdict}`);
-});</code></pre>
+    body: JSON.stringify({
+        ticker: 'AAPL',
+        fmp_api_key: 'your_fmp_api_key',
+        serp_api_key: 'your_serp_api_key',
+        gemini_api_key: 'your_gemini_api_key',
+        include_detailed_analysis: true
+    })
+});
+
+const result = await response.json();
+console.log(`Score: ${result.composite_score}`);
+console.log(`Verdict: ${result.verdict}`);</code></pre>
                 </div>
 
                 <!-- cURL Example -->
                 <div class="mb-4">
-                    <h6 class="fw-bold">cURL</h6>
-                    <pre><code>curl -X POST "{{ request.url_root.rstrip('/') }}/api/evaluate" \
+                    <h6 class="text-primary">cURL</h6>
+                    <pre><code>curl -X POST https://your-app-domain.com/api/evaluate \
   -H "Content-Type: application/json" \
   -d '{
     "ticker": "AAPL",
@@ -186,89 +233,40 @@ fetch(url, {
             </div>
         </div>
 
-        <!-- Error Handling -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Error Handling
-                </h5>
-            </div>
-            <div class="card-body">
-                <p>All errors return appropriate HTTP status codes and error messages:</p>
-                
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Status Code</th>
-                                <th>Description</th>
-                                <th>Example Response</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><span class="badge bg-danger">400</span></td>
-                                <td>Bad Request - Missing or invalid parameters</td>
-                                <td><code>{"error": "Ticker symbol is required"}</code></td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge bg-danger">500</span></td>
-                                <td>Internal Server Error</td>
-                                <td><code>{"error": "API Error"}</code></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Rate Limits -->
+        <!-- Rate Limiting -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fas fa-tachometer-alt me-2"></i>
-                    Rate Limits
+                    Rate Limiting
                 </h5>
             </div>
             <div class="card-body">
                 <p>
-                    Rate limits are based on your individual API key limits:
+                    To ensure fair usage and prevent abuse, the API implements rate limiting:
                 </p>
                 <ul>
-                    <li><strong>Financial Modeling Prep:</strong> 15 requests/minute (free tier)</li>
-                    <li><strong>SERP API:</strong> Varies by plan</li>
-                    <li><strong>Google Gemini:</strong> Varies by plan</li>
+                    <li><strong>5 requests per minute</strong> per IP address</li>
+                    <li><strong>200 requests per day</strong> per IP address</li>
+                    <li>Rate limit headers are included in responses</li>
                 </ul>
-                <div class="alert alert-warning">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Analysis typically takes 30-60 seconds due to multiple API calls.
-                </div>
+                <p class="text-muted small">
+                    When rate limited, you'll receive a 429 status code. Wait for the reset time before making new requests.
+                </p>
             </div>
         </div>
 
         <!-- Support -->
         <div class="text-center">
-            <div class="card bg-light">
-                <div class="card-body">
-                    <h5 class="mb-3">
-                        <i class="fas fa-question-circle text-primary me-2"></i>
-                        Need Help?
-                    </h5>
-                    <p class="mb-3">
-                        If you need assistance with the API or have questions about integration, 
-                        please check our documentation or contact support.
-                    </p>
-                    <a href="{{ url_for('about') }}" class="btn btn-primary me-2">
-                        <i class="fas fa-info-circle me-2"></i>
-                        About
-                    </a>
-                    <a href="{{ url_for('evaluate') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-play me-2"></i>
-                        Try It Now
-                    </a>
-                </div>
-            </div>
+            <h5 class="mb-3">Need Help?</h5>
+            <p class="text-muted mb-4">
+                If you have questions about the API or need assistance with integration, 
+                please check the documentation or contact support.
+            </p>
+            <a href="{{ url_for('evaluate') }}" class="btn btn-primary">
+                <i class="fas fa-play me-2"></i>
+                Try the Web Interface
+            </a>
         </div>
     </div>
 </div>
