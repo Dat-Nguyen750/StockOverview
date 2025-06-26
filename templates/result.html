@@ -206,10 +206,57 @@
                 <i class="fas fa-search me-2"></i>
                 Analyze Another Stock
             </a>
+            <button onclick="quickAnalyze()" class="btn btn-outline-primary btn-lg me-3" id="quickAnalyzeBtn">
+                <i class="fas fa-bolt me-2"></i>
+                Quick Analyze Another
+            </button>
             <button onclick="window.print()" class="btn btn-outline-secondary btn-lg">
                 <i class="fas fa-print me-2"></i>
                 Print Report
             </button>
+        </div>
+
+        <!-- Quick Analyze Modal -->
+        <div class="modal fade" id="quickAnalyzeModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-bolt text-primary me-2"></i>
+                            Quick Analysis
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">
+                            Enter a new stock ticker to analyze using your cached API keys.
+                        </p>
+                        <div class="mb-3">
+                            <label for="quickTicker" class="form-label">Stock Ticker</label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="quickTicker" 
+                                   placeholder="e.g., MSFT, GOOGL, TSLA"
+                                   maxlength="10"
+                                   pattern="[A-Za-z]{1,10}">
+                            <div class="form-text">
+                                Enter the stock symbol you want to analyze
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>Your API keys are cached and will be used automatically.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="submitQuickAnalysis()">
+                            <i class="fas fa-search me-2"></i>
+                            Analyze
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Disclaimer -->
@@ -242,4 +289,100 @@
     }
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Quick analyze functionality
+function quickAnalyze() {
+    // Check if API keys are cached
+    const fmpKey = sessionStorage.getItem('stockoverview_fmp_key');
+    const serpKey = sessionStorage.getItem('stockoverview_serp_key');
+    const geminiKey = sessionStorage.getItem('stockoverview_gemini_key');
+    
+    if (!fmpKey || !serpKey || !geminiKey) {
+        // If keys aren't cached, redirect to main form
+        window.location.href = "{{ url_for('evaluate') }}";
+        return;
+    }
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('quickAnalyzeModal'));
+    modal.show();
+    
+    // Focus on ticker input
+    setTimeout(() => {
+        document.getElementById('quickTicker').focus();
+    }, 500);
+}
+
+function submitQuickAnalysis() {
+    const ticker = document.getElementById('quickTicker').value.toUpperCase().trim();
+    
+    if (!ticker) {
+        alert('Please enter a stock ticker symbol');
+        return;
+    }
+    
+    if (!/^[A-Z]{1,10}$/.test(ticker)) {
+        alert('Please enter a valid stock ticker (1-10 letters)');
+        return;
+    }
+    
+    // Get cached API keys
+    const fmpKey = sessionStorage.getItem('stockoverview_fmp_key');
+    const serpKey = sessionStorage.getItem('stockoverview_serp_key');
+    const geminiKey = sessionStorage.getItem('stockoverview_gemini_key');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('ticker', ticker);
+    formData.append('fmp_key', fmpKey);
+    formData.append('serp_key', serpKey);
+    formData.append('gemini_key', geminiKey);
+    
+    // Show loading state
+    const analyzeBtn = document.querySelector('#quickAnalyzeModal .btn-primary');
+    const originalText = analyzeBtn.innerHTML;
+    analyzeBtn.disabled = true;
+    analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing...';
+    
+    // Submit the form
+    fetch("{{ url_for('evaluate') }}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            // Redirect to results page
+            window.location.href = response.url;
+        } else if (response.ok) {
+            // If response is HTML, replace current page
+            return response.text().then(html => {
+                document.documentElement.innerHTML = html;
+            });
+        } else {
+            throw new Error('Analysis failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Analysis failed. Please try again.');
+        
+        // Reset button
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = originalText;
+    });
+}
+
+// Auto-format ticker input in modal
+document.addEventListener('DOMContentLoaded', function() {
+    const quickTicker = document.getElementById('quickTicker');
+    if (quickTicker) {
+        quickTicker.addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '');
+        });
+    }
+});
+</script>
 {% endblock %} 

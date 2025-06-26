@@ -59,12 +59,17 @@
                                 <i class="fas fa-chart-line text-success me-2"></i>
                                 Financial Modeling Prep API Key
                             </label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="fmp_key" 
-                                   name="fmp_key" 
-                                   placeholder="Enter your FMP API key"
-                                   required>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="fmp_key" 
+                                       name="fmp_key" 
+                                       placeholder="Enter your FMP API key"
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('fmp_key')">
+                                    <i class="fas fa-eye" id="fmp_key_icon"></i>
+                                </button>
+                            </div>
                             <div class="form-text">
                                 <a href="https://financialmodelingprep.com/developer/docs/" target="_blank">
                                     Get your free API key here
@@ -78,12 +83,17 @@
                                 <i class="fas fa-search text-info me-2"></i>
                                 SERP API Key
                             </label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="serp_key" 
-                                   name="serp_key" 
-                                   placeholder="Enter your SERP API key"
-                                   required>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="serp_key" 
+                                       name="serp_key" 
+                                       placeholder="Enter your SERP API key"
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('serp_key')">
+                                    <i class="fas fa-eye" id="serp_key_icon"></i>
+                                </button>
+                            </div>
                             <div class="form-text">
                                 <a href="https://serpapi.com/" target="_blank">
                                     Get your API key here
@@ -97,17 +107,31 @@
                                 <i class="fas fa-robot text-warning me-2"></i>
                                 Google Gemini API Key
                             </label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="gemini_key" 
-                                   name="gemini_key" 
-                                   placeholder="Enter your Gemini API key"
-                                   required>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="gemini_key" 
+                                       name="gemini_key" 
+                                       placeholder="Enter your Gemini API key"
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('gemini_key')">
+                                    <i class="fas fa-eye" id="gemini_key_icon"></i>
+                                </button>
+                            </div>
                             <div class="form-text">
                                 <a href="https://ai.google.dev/" target="_blank">
                                     Get your API key here
                                 </a>
                             </div>
+                        </div>
+
+                        <!-- Cache Status -->
+                        <div class="alert alert-info" id="cacheStatus" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="cacheStatusText"></span>
+                            <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="clearCache()">
+                                <i class="fas fa-trash me-1"></i>Clear Cache
+                            </button>
                         </div>
                     </div>
 
@@ -130,7 +154,7 @@
                         <i class="fas fa-shield-alt text-success mb-3" style="font-size: 2rem;"></i>
                         <h6 class="card-title">Secure & Private</h6>
                         <p class="card-text small">
-                            Your API keys are never stored. Each analysis uses your own credentials for maximum security.
+                            Your API keys are never stored on our servers. They're cached locally in your browser and automatically cleared when you close the tab.
                         </p>
                     </div>
                 </div>
@@ -162,9 +186,112 @@
 
 {% block extra_js %}
 <script>
+// Cache management functions
+const CACHE_KEYS = {
+    FMP_KEY: 'stockoverview_fmp_key',
+    SERP_KEY: 'stockoverview_serp_key',
+    GEMINI_KEY: 'stockoverview_gemini_key'
+};
+
+// Load cached API keys on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadCachedKeys();
+    updateCacheStatus();
+});
+
+// Load cached API keys from session storage
+function loadCachedKeys() {
+    const fmpKey = sessionStorage.getItem(CACHE_KEYS.FMP_KEY);
+    const serpKey = sessionStorage.getItem(CACHE_KEYS.SERP_KEY);
+    const geminiKey = sessionStorage.getItem(CACHE_KEYS.GEMINI_KEY);
+    
+    if (fmpKey) document.getElementById('fmp_key').value = fmpKey;
+    if (serpKey) document.getElementById('serp_key').value = serpKey;
+    if (geminiKey) document.getElementById('gemini_key').value = geminiKey;
+}
+
+// Save API keys to session storage
+function saveKeysToCache() {
+    const fmpKey = document.getElementById('fmp_key').value;
+    const serpKey = document.getElementById('serp_key').value;
+    const geminiKey = document.getElementById('gemini_key').value;
+    
+    if (fmpKey) sessionStorage.setItem(CACHE_KEYS.FMP_KEY, fmpKey);
+    if (serpKey) sessionStorage.setItem(CACHE_KEYS.SERP_KEY, serpKey);
+    if (geminiKey) sessionStorage.setItem(CACHE_KEYS.GEMINI_KEY, geminiKey);
+}
+
+// Clear all cached keys
+function clearCache() {
+    sessionStorage.removeItem(CACHE_KEYS.FMP_KEY);
+    sessionStorage.removeItem(CACHE_KEYS.SERP_KEY);
+    sessionStorage.removeItem(CACHE_KEYS.GEMINI_KEY);
+    
+    // Clear form fields
+    document.getElementById('fmp_key').value = '';
+    document.getElementById('serp_key').value = '';
+    document.getElementById('gemini_key').value = '';
+    
+    updateCacheStatus();
+    
+    // Show confirmation
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        API keys cleared from cache successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.getElementById('cacheStatus').parentNode.insertBefore(alert, document.getElementById('cacheStatus'));
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 3000);
+}
+
+// Update cache status display
+function updateCacheStatus() {
+    const fmpKey = sessionStorage.getItem(CACHE_KEYS.FMP_KEY);
+    const serpKey = sessionStorage.getItem(CACHE_KEYS.SERP_KEY);
+    const geminiKey = sessionStorage.getItem(CACHE_KEYS.GEMINI_KEY);
+    
+    const cacheStatus = document.getElementById('cacheStatus');
+    const cacheStatusText = document.getElementById('cacheStatusText');
+    
+    if (fmpKey || serpKey || geminiKey) {
+        const cachedCount = [fmpKey, serpKey, geminiKey].filter(key => key).length;
+        cacheStatusText.textContent = `${cachedCount} API key${cachedCount > 1 ? 's' : ''} cached in your browser session. Keys will be automatically cleared when you close this tab.`;
+        cacheStatus.style.display = 'block';
+    } else {
+        cacheStatus.style.display = 'none';
+    }
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '_icon');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        field.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+// Form submission handler
 document.getElementById('analysisForm').addEventListener('submit', function(e) {
     const submitBtn = document.getElementById('submitBtn');
     const originalText = submitBtn.innerHTML;
+    
+    // Save keys to cache before submitting
+    saveKeysToCache();
+    updateCacheStatus();
     
     // Show loading state
     submitBtn.disabled = true;
@@ -180,6 +307,22 @@ document.getElementById('analysisForm').addEventListener('submit', function(e) {
 // Auto-format ticker input
 document.getElementById('ticker').addEventListener('input', function(e) {
     this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '');
+});
+
+// Save keys to cache when user types in them
+document.getElementById('fmp_key').addEventListener('input', function() {
+    setTimeout(saveKeysToCache, 500); // Debounce
+    setTimeout(updateCacheStatus, 500);
+});
+
+document.getElementById('serp_key').addEventListener('input', function() {
+    setTimeout(saveKeysToCache, 500); // Debounce
+    setTimeout(updateCacheStatus, 500);
+});
+
+document.getElementById('gemini_key').addEventListener('input', function() {
+    setTimeout(saveKeysToCache, 500); // Debounce
+    setTimeout(updateCacheStatus, 500);
 });
 </script>
 {% endblock %} 
