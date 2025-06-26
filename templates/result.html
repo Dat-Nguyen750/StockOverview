@@ -4,590 +4,795 @@
 
 {% block head %}
 <style>
-    .analysis-text {
-        line-height: 1.6;
-        margin-bottom: 0;
+    /* Modern Design System */
+    :root {
+        --primary-color: #2563eb;
+        --primary-light: #3b82f6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --border-radius: 0.75rem;
+        --border-radius-lg: 1rem;
     }
-    
-    .analysis-text strong {
-        color: #0d6efd;
-        font-weight: 600;
+
+    /* Base Styles */
+    .analysis-container {
+        background: var(--gray-50);
+        min-height: 100vh;
+        padding: 2rem 0;
     }
-    
-    .analysis-text br {
+
+    .analysis-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .analysis-card-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .analysis-card-body {
+        padding: 2rem;
+    }
+
+    /* Score Display */
+    .score-display {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--gray-50);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px solid var(--gray-200);
+    }
+
+    .score-main {
+        text-align: center;
+        flex: 1;
+    }
+
+    .score-number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
         margin-bottom: 0.5rem;
     }
-    
-    .key-metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .metric-item {
-        background: #f8f9fa;
-        padding: 0.75rem;
-        border-radius: 0.375rem;
-        border-left: 3px solid #0d6efd;
-    }
-    
-    .metric-label {
-        font-size: 0.875rem;
-        color: #6c757d;
-        margin-bottom: 0.25rem;
-    }
-    
-    .metric-value {
+
+    .score-label {
+        font-size: 1.25rem;
         font-weight: 600;
-        color: #212529;
+        color: var(--gray-600);
+        margin-bottom: 1rem;
     }
-    
-    /* Improved spacing and layout for detailed analysis */
-    .detailed-analysis-grid {
+
+    .verdict-badge {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 2rem;
+        font-size: 1.125rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Score Breakdown */
+    .score-breakdown {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1.5rem;
-        margin-top: 1rem;
+        margin-bottom: 2rem;
     }
-    
-    .analysis-section {
-        background: #ffffff;
-        border: 1px solid #e9ecef;
-        border-radius: 0.5rem;
+
+    .breakdown-item {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--border-radius);
         padding: 1.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        transition: box-shadow 0.2s ease;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
     }
-    
-    .analysis-section:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+
+    .breakdown-item:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
     }
-    
-    .analysis-section h6 {
-        color: #0d6efd;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-    
-    .analysis-content {
-        line-height: 1.7;
-        color: #495057;
-    }
-    
-    .analysis-content .section-label {
-        font-weight: 700;
-        color: #0d6efd;
-        font-size: 1.1rem;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-    
-    .analysis-content .section-text {
-        margin-bottom: 1rem;
-        padding-left: 0.5rem;
-        border-left: 3px solid #e9ecef;
-    }
-    
-    /* Improved spacing for key-value pairs */
-    .key-value-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .key-value-item {
+
+    .breakdown-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.75rem;
-        background: #f8f9fa;
-        border-radius: 0.375rem;
-        border-left: 3px solid #0d6efd;
+        margin-bottom: 1rem;
     }
-    
-    .key-value-label {
-        font-weight: 500;
-        color: #495057;
-        flex: 1;
-        margin-right: 1rem;
-    }
-    
-    .key-value-content {
+
+    .breakdown-name {
         font-weight: 600;
-        color: #212529;
-        text-align: right;
+        color: var(--gray-700);
+        font-size: 1rem;
     }
-    
-    /* Key Metrics Table Styling */
-    .key-metrics-table {
+
+    .breakdown-score {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: var(--gray-200);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    /* Detailed Analysis */
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .analysis-section {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+    }
+
+    .analysis-section:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--gray-200);
+    }
+
+    /* Key Metrics Table */
+    .metrics-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 1rem;
         background: white;
-        border-radius: 0.5rem;
+        border-radius: var(--border-radius);
         overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: var(--shadow-sm);
+        margin-top: 1rem;
     }
-    
-    .key-metrics-table th {
-        background: #0d6efd;
+
+    .metrics-table th {
+        background: var(--primary-color);
         color: white;
-        padding: 1rem;
+        padding: 1rem 1.5rem;
         text-align: left;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
-    
-    .key-metrics-table td {
-        padding: 0.875rem 1rem;
-        border-bottom: 1px solid #e9ecef;
+
+    .metrics-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--gray-200);
         vertical-align: middle;
     }
-    
-    .key-metrics-table tr:nth-child(even) {
-        background: #f8f9fa;
+
+    .metrics-table tr:nth-child(even) {
+        background: var(--gray-50);
     }
-    
-    .key-metrics-table tr:hover {
-        background: #e9ecef;
+
+    .metrics-table tr:hover {
+        background: var(--gray-100);
     }
-    
-    .key-metrics-table tr:last-child td {
+
+    .metrics-table tr:last-child td {
         border-bottom: none;
     }
-    
+
     .metric-name {
-        font-weight: 500;
-        color: #495057;
-    }
-    
-    .metric-value-cell {
         font-weight: 600;
-        color: #212529;
+        color: var(--gray-700);
+    }
+
+    .metric-value {
+        font-weight: 700;
+        color: var(--gray-900);
         text-align: right;
     }
-    
-    /* Responsive improvements */
+
+    /* Analysis Content */
+    .analysis-content {
+        line-height: 1.8;
+        color: var(--gray-700);
+        font-size: 1rem;
+    }
+
+    .content-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--gray-50);
+        border-radius: var(--border-radius);
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .content-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .content-text {
+        color: var(--gray-700);
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    /* Lists */
+    .analysis-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .analysis-list li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .analysis-list li:last-child {
+        border-bottom: none;
+    }
+
+    .list-icon {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        margin-top: 0.125rem;
+    }
+
+    .list-text {
+        flex: 1;
+        color: var(--gray-700);
+    }
+
+    /* Data Sources */
+    .data-sources {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .source-badge {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+
+    .btn-modern {
+        padding: 0.875rem 1.75rem;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-primary-modern {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: var(--primary-light);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-outline-modern {
+        background: transparent;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .btn-outline-modern:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    /* Warning Alert */
+    .warning-alert {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: 1px solid #f59e0b;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .warning-icon {
+        color: #d97706;
+        font-size: 1.5rem;
+    }
+
+    .warning-content {
+        flex: 1;
+    }
+
+    .warning-title {
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+    }
+
+    .warning-text {
+        color: #78350f;
+        margin: 0;
+    }
+
+    /* Responsive Design */
     @media (max-width: 768px) {
-        .detailed-analysis-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
+        .analysis-container {
+            padding: 1rem 0;
         }
-        
-        .key-value-grid {
-            grid-template-columns: 1fr;
+
+        .analysis-card-body {
+            padding: 1.5rem;
         }
-        
-        .key-value-item {
+
+        .score-display {
             flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
+            gap: 1.5rem;
+            text-align: center;
         }
-        
-        .key-value-content {
-            text-align: left;
+
+        .score-number {
+            font-size: 3rem;
+        }
+
+        .analysis-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .btn-modern {
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .analysis-container {
+            background: white;
+            padding: 0;
+        }
+
+        .analysis-card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+
+        .action-buttons,
+        .warning-alert {
+            display: none;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10">
+<div class="analysis-container">
+    <div class="container">
+        <!-- Warning Alert for Fallback Data -->
         {% if result.data_freshness == 'fallback' %}
-        <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border: 2px solid #dc3545;">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <div>
-                <strong>Warning:</strong> Your API is not working or returned incomplete data. The app is using fallback values. Please check your API keys or try again later for the most accurate results.
+        <div class="warning-alert">
+            <i class="fas fa-exclamation-triangle warning-icon"></i>
+            <div class="warning-content">
+                <div class="warning-title">API Data Unavailable</div>
+                <p class="warning-text">Your API is not working or returned incomplete data. The app is using fallback values. Please check your API keys or try again later for the most accurate results.</p>
             </div>
         </div>
         {% endif %}
-        <!-- Header -->
-        <div class="text-center mb-4">
-            <h2 class="fw-bold text-dark">
-                <i class="fas fa-chart-line text-primary me-2"></i>
-                {{ result.company_name }} ({{ result.ticker }})
-            </h2>
-            <p class="text-muted">
-                Analysis completed on {{ result.evaluation_timestamp }}
-            </p>
-        </div>
 
-        <!-- Overall Score -->
-        <div class="card mb-4 shadow-sm border-primary">
-            <div class="card-body text-center p-4 bg-light">
-                <div class="row align-items-center g-4">
-                    <div class="col-md-6 border-end">
-                        <h3 class="fw-bold mb-2 text-primary">Overall Score</h3>
-                        <div class="display-3 fw-bold mb-2 {% if result.composite_score >= 80 %}text-success{% elif result.composite_score >= 65 %}text-primary{% elif result.composite_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
-                            {{ "%.1f"|format(result.composite_score) }}/100
+        <!-- Main Analysis Card -->
+        <div class="analysis-card">
+            <!-- Header -->
+            <div class="analysis-card-header">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-chart-line me-3"></i>
+                    {{ result.company_name }} ({{ result.ticker }})
+                </h1>
+                <p class="mb-0 opacity-75">
+                    Analysis completed on {{ result.evaluation_timestamp }}
+                </p>
+            </div>
+
+            <!-- Body -->
+            <div class="analysis-card-body">
+                <!-- Score Display -->
+                <div class="score-display">
+                    <div class="score-main">
+                        <div class="score-label">Overall Score</div>
+                        <div class="score-number {% if result.composite_score >= 80 %}text-success{% elif result.composite_score >= 65 %}text-primary{% elif result.composite_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ "%.1f"|format(result.composite_score) }}
                         </div>
+                        <div class="text-muted">out of 100</div>
                     </div>
-                    <div class="col-md-6">
-                        <h4 class="mb-2">Verdict</h4>
-                        <div class="badge {% if result.verdict == '✅ Investable' %}bg-success{% elif result.verdict == '⚠️ Cautious' %}bg-warning{% elif result.verdict == '❌ Avoid' %}bg-danger{% else %}bg-secondary{% endif %} fs-4 px-4 py-3" data-bs-toggle="tooltip" title="This is an AI-generated investment verdict. Always do your own research!">
+                    <div class="score-main">
+                        <div class="score-label">Investment Verdict</div>
+                        <div class="verdict-badge {% if result.verdict == '✅ Investable' %}bg-success{% elif result.verdict == '⚠️ Cautious' %}bg-warning{% elif result.verdict == '❌ Avoid' %}bg-danger{% else %}bg-secondary{% endif %}">
                             {{ result.verdict }}
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Score Breakdown -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary bg-opacity-10 border-bottom border-primary">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Score Breakdown
-                </h5>
-            </div>
-            <div class="card-body bg-light">
-                <div class="row g-3">
+                <!-- AI Analysis Summary -->
+                <div class="content-section">
+                    <div class="content-title">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        AI Analysis Summary
+                    </div>
+                    <p class="content-text">{{ result.explanation }}</p>
+                </div>
+
+                <!-- Score Breakdown -->
+                <div class="score-breakdown">
                     {% for category, score in result.score_breakdown.items() %}
-                    <div class="col-md-6 col-lg-4">
-                        <div class="p-3 rounded border h-100 d-flex flex-column justify-content-between bg-white">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="fw-bold text-secondary">{{ category.replace('_', ' ').title() }}</span>
-                                <span class="badge {% if score >= 80 %}bg-success{% elif score >= 65 %}bg-primary{% elif score >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                                    {{ score }}/100
-                                </span>
-                            </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar {% if score >= 80 %}bg-success{% elif score >= 65 %}bg-primary{% elif score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ score }}%"></div>
-                            </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-header">
+                            <span class="breakdown-name">{{ category.replace('_', ' ').title() }}</span>
+                            <span class="breakdown-score {% if score >= 80 %}text-success{% elif score >= 65 %}text-primary{% elif score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ score }}/100
+                            </span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill {% if score >= 80 %}bg-success{% elif score >= 65 %}bg-primary{% elif score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 style="width: {{ score }}%"></div>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-            </div>
-        </div>
 
-        <!-- Explanation -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-light border-bottom">
-                <h5 class="mb-0">
-                    <i class="fas fa-lightbulb text-warning me-2"></i>
-                    AI Analysis Summary
-                </h5>
-            </div>
-            <div class="card-body bg-white">
-                <p class="mb-0 fs-5 text-dark">{{ result.explanation }}</p>
-            </div>
-        </div>
-
-        <!-- Detailed Analysis -->
-        {% if result.detailed_analysis %}
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary bg-opacity-10 border-bottom border-primary">
-                <h5 class="mb-0">
-                    <i class="fas fa-search-plus me-2"></i>
-                    Detailed Analysis
-                </h5>
-            </div>
-            <div class="card-body bg-light">
-                <div class="detailed-analysis-grid">
+                <!-- Detailed Analysis -->
+                {% if result.detailed_analysis %}
+                <div class="analysis-grid">
                     {% for section, data in result.detailed_analysis.items() %}
                     <div class="analysis-section">
-                        <h6>{{ section.replace('_', ' ').title() }}</h6>
+                        <div class="section-title">{{ section.replace('_', ' ').title() }}</div>
                         
-                        <!-- Handle Scores -->
                         {% if data.scores %}
-                        <div class="mb-3">
-                            <h6 class="text-secondary mb-2">Scores:</h6>
-                            <div class="key-value-grid">
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-secondary mb-3">Scores</h6>
+                            <div class="analysis-list">
                                 {% for metric, score in data.scores.items() %}
-                                <div class="key-value-item">
-                                    <span class="key-value-label">{{ metric.replace('_', ' ').title() }}</span>
-                                    <span class="key-value-content">{{ score }}/100</span>
-                                </div>
+                                <li>
+                                    <div class="list-icon bg-primary text-white">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="list-text">
+                                        <strong>{{ metric.replace('_', ' ').title() }}</strong>
+                                        <span class="float-end fw-bold">{{ score }}/100</span>
+                                    </div>
+                                </li>
                                 {% endfor %}
                             </div>
                         </div>
                         {% endif %}
-                        
-                        <!-- Handle Details -->
+
                         {% if data.details %}
-                        <div class="mb-3">
-                            <h6 class="text-secondary mb-2">Details:</h6>
-                            <div class="key-value-grid">
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-secondary mb-3">Details</h6>
+                            <div class="analysis-list">
                                 {% for metric, value in data.details.items() %}
-                                <div class="key-value-item">
-                                    <span class="key-value-label">{{ metric.replace('_', ' ').title() }}</span>
-                                    <span class="key-value-content">
-                                        {% if value is number %}
-                                            {% if 'ratio' in metric.lower() or 'multiple' in metric.lower() %}
-                                                {{ "%.2f"|format(value) }}
-                                            {% elif 'cagr' in metric.lower() or 'margin' in metric.lower() or 'roe' in metric.lower() %}
-                                                {{ "%.1f"|format(value) }}%
-                                            {% else %}
-                                                {{ "{:,.0f}".format(value) }}
-                                            {% endif %}
-                                        {% else %}
-                                            {{ value }}
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Handle simple key-value pairs -->
-                        {% if not data.scores and not data.details %}
-                            {% if data is mapping %}
-                                {% for key, value in data.items() %}
-                                <div class="mb-3">
-                                    <h6 class="text-secondary mb-2">{{ key.replace('_', ' ').title() }}:</h6>
-                                    {% if value is string %}
-                                        <!-- Handle long paragraphs - put in their own box -->
-                                        {% if key.lower() in ['tam assessment', 'growth initiative', 'management quality', 'competitive moat', 'revenue model', 'industry position'] %}
-                                            <div class="analysis-content">
-                                                <span class="section-label">{{ key.replace('_', ' ').title() }}:</span>
-                                                <div class="section-text">
-                                                    {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
-                                                    {{ formatted_text|safe }}
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <!-- Handle markdown-like formatting for other content -->
-                                            {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
-                                            <div class="analysis-text">{{ formatted_text|safe }}</div>
-                                        {% endif %}
-                                    {% elif value is number %}
-                                        <div class="key-value-item">
-                                            <span class="key-value-label">Value</span>
-                                            <span class="key-value-content">
-                                                {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
+                                <li>
+                                    <div class="list-icon bg-info text-white">
+                                        <i class="fas fa-info"></i>
+                                    </div>
+                                    <div class="list-text">
+                                        <strong>{{ metric.replace('_', ' ').title() }}</strong>
+                                        <span class="float-end fw-bold">
+                                            {% if value is number %}
+                                                {% if 'ratio' in metric.lower() or 'multiple' in metric.lower() %}
                                                     {{ "%.2f"|format(value) }}
-                                                {% elif 'cagr' in key.lower() or 'margin' in key.lower() or 'roe' in key.lower() %}
+                                                {% elif 'cagr' in metric.lower() or 'margin' in metric.lower() or 'roe' in metric.lower() %}
                                                     {{ "%.1f"|format(value) }}%
                                                 {% else %}
                                                     {{ "{:,.0f}".format(value) }}
                                                 {% endif %}
-                                            </span>
-                                        </div>
-                                    {% elif value is mapping %}
-                                        <!-- Special handling for Key Metrics -->
-                                        {% if key.lower() == 'key metrics' %}
-                                            <div class="key-metrics-table">
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Metric</th>
-                                                            <th>Value</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for metric_name, metric_value in value.items() %}
-                                                        <tr>
-                                                            <td class="metric-name">{{ metric_name.replace('_', ' ').title() }}</td>
-                                                            <td class="metric-value-cell">
-                                                                {% if metric_value is number %}
-                                                                    {% if 'ratio' in metric_name.lower() or 'multiple' in metric_name.lower() or 'pe' in metric_name.lower() or 'pb' in metric_name.lower() or 'ps' in metric_name.lower() %}
-                                                                        {{ "%.2f"|format(metric_value) }}
-                                                                    {% elif 'yield' in metric_name.lower() or 'margin' in metric_name.lower() or 'roe' in metric_name.lower() or 'roic' in metric_name.lower() %}
-                                                                        {{ "%.1f"|format(metric_value) }}%
-                                                                    {% elif metric_value > 1000000 %}
-                                                                        ${{ "{:,.1f}M".format(metric_value / 1000000) }}
-                                                                    {% elif metric_value > 1000 %}
-                                                                        ${{ "{:,.0f}K".format(metric_value / 1000) }}
-                                                                    {% else %}
-                                                                        ${{ "{:,.0f}".format(metric_value) }}
-                                                                    {% endif %}
-                                                                {% else %}
-                                                                    {{ metric_value }}
-                                                                {% endif %}
-                                                            </td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
+                                            {% else %}
+                                                {{ value }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if not data.scores and not data.details %}
+                            {% if data is mapping %}
+                                {% for key, value in data.items() %}
+                                <div class="content-section">
+                                    <div class="content-title">{{ key.replace('_', ' ').title() }}</div>
+                                    {% if value is string %}
+                                        {% if key.lower() in ['tam assessment', 'growth initiative', 'management quality', 'competitive moat', 'revenue model', 'industry position'] %}
+                                            <div class="content-text">
+                                                {{ value|replace('* **', '').replace('**', '').replace('* ', '• ') }}
                                             </div>
                                         {% else %}
-                                            <div class="key-value-grid">
-                                                {% for sub_key, sub_value in value.items() %}
-                                                <div class="key-value-item">
-                                                    <span class="key-value-label">{{ sub_key.replace('_', ' ').title() }}</span>
-                                                    <span class="key-value-content">
-                                                        {% if sub_value is number %}
-                                                            {% if 'ratio' in sub_key.lower() or 'multiple' in sub_key.lower() %}
-                                                                {{ "%.2f"|format(sub_value) }}
-                                                            {% elif 'cagr' in sub_key.lower() or 'margin' in sub_key.lower() or 'roe' in sub_key.lower() %}
-                                                                {{ "%.1f"|format(sub_value) }}%
+                                            <div class="content-text">
+                                                {{ value|replace('* **', '').replace('**', '').replace('* ', '• ') }}
+                                            </div>
+                                        {% endif %}
+                                    {% elif value is number %}
+                                        <div class="content-text">
+                                            <strong>Value:</strong> 
+                                            {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
+                                                {{ "%.2f"|format(value) }}
+                                            {% elif 'cagr' in key.lower() or 'margin' in key.lower() or 'roe' in key.lower() %}
+                                                {{ "%.1f"|format(value) }}%
+                                            {% else %}
+                                                {{ "{:,.0f}".format(value) }}
+                                            {% endif %}
+                                        </div>
+                                    {% elif value is mapping %}
+                                        {% if key.lower() == 'key metrics' %}
+                                            <table class="metrics-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Metric</th>
+                                                        <th>Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for metric_name, metric_value in value.items() %}
+                                                    <tr>
+                                                        <td class="metric-name">{{ metric_name.replace('_', ' ').title() }}</td>
+                                                        <td class="metric-value">
+                                                            {% if metric_value is number %}
+                                                                {% if 'ratio' in metric_name.lower() or 'multiple' in metric_name.lower() or 'pe' in metric_name.lower() or 'pb' in metric_name.lower() or 'ps' in metric_name.lower() %}
+                                                                    {{ "%.2f"|format(metric_value) }}
+                                                                {% elif 'yield' in metric_name.lower() or 'margin' in metric_name.lower() or 'roe' in metric_name.lower() or 'roic' in metric_name.lower() %}
+                                                                    {{ "%.1f"|format(metric_value) }}%
+                                                                {% elif metric_value > 1000000 %}
+                                                                    ${{ "{:,.1f}M".format(metric_value / 1000000) }}
+                                                                {% elif metric_value > 1000 %}
+                                                                    ${{ "{:,.0f}K".format(metric_value / 1000) }}
+                                                                {% else %}
+                                                                    ${{ "{:,.0f}".format(metric_value) }}
+                                                                {% endif %}
                                                             {% else %}
-                                                                {{ "{:,.0f}".format(sub_value) }}
+                                                                {{ metric_value }}
                                                             {% endif %}
-                                                        {% else %}
-                                                            {{ sub_value }}
-                                                        {% endif %}
-                                                    </span>
-                                                </div>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        {% else %}
+                                            <div class="analysis-list">
+                                                {% for sub_key, sub_value in value.items() %}
+                                                <li>
+                                                    <div class="list-icon bg-secondary text-white">
+                                                        <i class="fas fa-chart-bar"></i>
+                                                    </div>
+                                                    <div class="list-text">
+                                                        <strong>{{ sub_key.replace('_', ' ').title() }}</strong>
+                                                        <span class="float-end fw-bold">
+                                                            {% if sub_value is number %}
+                                                                {% if 'ratio' in sub_key.lower() or 'multiple' in sub_key.lower() %}
+                                                                    {{ "%.2f"|format(sub_value) }}
+                                                                {% elif 'cagr' in sub_key.lower() or 'margin' in sub_key.lower() or 'roe' in sub_key.lower() %}
+                                                                    {{ "%.1f"|format(sub_value) }}%
+                                                                {% else %}
+                                                                    {{ "{:,.0f}".format(sub_value) }}
+                                                                {% endif %}
+                                                            {% else %}
+                                                                {{ sub_value }}
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                </li>
                                                 {% endfor %}
                                             </div>
                                         {% endif %}
                                     {% elif value is iterable and value is not string %}
-                                        <!-- Handle lists -->
-                                        <ul class="list-unstyled mb-0">
+                                        <div class="analysis-list">
                                             {% for item in value %}
-                                            <li class="mb-1">
-                                                {% if key.lower() == 'key strengths' %}
-                                                    <i class="fas fa-plus-circle text-success me-2"></i>
-                                                {% elif key.lower() == 'key concerns' %}
-                                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                                                {% else %}
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                {% endif %}
-                                                {{ item }}
+                                            <li>
+                                                <div class="list-icon {% if key.lower() == 'key strengths' %}bg-success{% elif key.lower() == 'key concerns' %}bg-warning{% else %}bg-info{% endif %} text-white">
+                                                    <i class="fas {% if key.lower() == 'key strengths' %}fa-plus{% elif key.lower() == 'key concerns' %}fa-exclamation{% else %}fa-check{% endif %}"></i>
+                                                </div>
+                                                <div class="list-text">{{ item }}</div>
                                             </li>
                                             {% endfor %}
-                                        </ul>
+                                        </div>
                                     {% else %}
-                                        <p class="mb-0">{{ value }}</p>
+                                        <div class="content-text">{{ value }}</div>
                                     {% endif %}
                                 </div>
                                 {% endfor %}
                             {% elif data is iterable and data is not string %}
-                                <!-- Handle top-level lists -->
-                                <ul class="list-unstyled mb-0">
+                                <div class="analysis-list">
                                     {% for item in data %}
-                                    <li class="mb-2">
-                                        {% if item is string %}
-                                            <i class="fas fa-info-circle text-info me-2"></i>
-                                            {{ item }}
-                                        {% else %}
-                                            {{ item }}
-                                        {% endif %}
+                                    <li>
+                                        <div class="list-icon bg-info text-white">
+                                            <i class="fas fa-info"></i>
+                                        </div>
+                                        <div class="list-text">{{ item }}</div>
                                     </li>
                                     {% endfor %}
-                                </ul>
-                            {% else %}
-                                <div class="mb-2">
-                                    <p class="mb-0">{{ data }}</p>
                                 </div>
+                            {% else %}
+                                <div class="content-text">{{ data }}</div>
                             {% endif %}
                         {% endif %}
                     </div>
                     {% endfor %}
                 </div>
-            </div>
-        </div>
-        {% endif %}
+                {% endif %}
 
-        <!-- Data Sources -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-light border-bottom">
-                <h5 class="mb-0">
-                    <i class="fas fa-database me-2"></i>
-                    Data Sources
-                </h5>
-            </div>
-            <div class="card-body bg-white">
-                <div class="row g-2">
-                    {% for source in result.data_sources %}
-                    <div class="col-md-4 mb-2">
-                        <span class="badge bg-light text-dark border border-primary px-3 py-2">
-                            <i class="fas fa-check-circle text-success me-1"></i>
+                <!-- Data Sources -->
+                <div class="content-section">
+                    <div class="content-title">
+                        <i class="fas fa-database me-2"></i>
+                        Data Sources
+                    </div>
+                    <div class="data-sources">
+                        {% for source in result.data_sources %}
+                        <div class="source-badge">
+                            <i class="fas fa-check-circle"></i>
                             {{ source }}
-                        </span>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="text-center mb-4">
-            <a href="{{ url_for('evaluate') }}" class="btn btn-primary btn-lg me-3 mb-2">
-                <i class="fas fa-search me-2"></i>
-                Analyze Another Stock
-            </a>
-            <button onclick="quickAnalyze()" class="btn btn-outline-primary btn-lg me-3 mb-2" id="quickAnalyzeBtn">
-                <i class="fas fa-bolt me-2"></i>
-                Quick Analyze Another
-            </button>
-            <button onclick="window.print()" class="btn btn-outline-secondary btn-lg mb-2">
-                <i class="fas fa-print me-2"></i>
-                Print Report
-            </button>
-        </div>
-
-        <!-- Quick Analyze Modal -->
-        <div class="modal fade" id="quickAnalyzeModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-bolt text-primary me-2"></i>
-                            Quick Analysis
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-muted mb-3">
-                            Enter a new stock ticker to analyze using your cached API keys.
-                        </p>
-                        <div class="mb-3">
-                            <label for="quickTicker" class="form-label">Stock Ticker</label>
-                            <input type="text" 
-                                   class="form-control form-control-lg" 
-                                   id="quickTicker" 
-                                   placeholder="e.g., MSFT, GOOGL, TSLA"
-                                   maxlength="10"
-                                   pattern="[A-Za-z]{1,10}">
-                            <div class="form-text">
-                                Enter the stock symbol you want to analyze
-                            </div>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <small>Your API keys are cached and will be used automatically.</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="submitQuickAnalysis()">
-                            <i class="fas fa-search me-2"></i>
-                            Analyze
-                        </button>
-                    </div>
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{{ url_for('evaluate') }}" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-search"></i>
+                        Analyze Another Stock
+                    </a>
+                    <button onclick="quickAnalyze()" class="btn-modern btn-outline-modern" id="quickAnalyzeBtn">
+                        <i class="fas fa-bolt"></i>
+                        Quick Analyze
+                    </button>
+                    <button onclick="window.print()" class="btn-modern btn-outline-modern">
+                        <i class="fas fa-print"></i>
+                        Print Report
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Disclaimer -->
-        <div class="mt-4">
-            <div class="alert alert-warning shadow-sm">
+        <div class="content-section">
+            <div class="content-title">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Disclaimer:</strong> This analysis is for informational purposes only and should not be considered as financial advice. 
+                Disclaimer
+            </div>
+            <p class="content-text">
+                This analysis is for informational purposes only and should not be considered as financial advice. 
                 Always conduct your own research and consult with a financial advisor before making investment decisions.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Analyze Modal -->
+<div class="modal fade" id="quickAnalyzeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-bolt text-primary me-2"></i>
+                    Quick Analysis
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    Enter a new stock ticker to analyze using your cached API keys.
+                </p>
+                <div class="mb-3">
+                    <label for="quickTicker" class="form-label">Stock Ticker</label>
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           id="quickTicker" 
+                           placeholder="e.g., MSFT, GOOGL, TSLA"
+                           maxlength="10"
+                           pattern="[A-Za-z]{1,10}">
+                    <div class="form-text">
+                        Enter the stock symbol you want to analyze
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small>Your API keys are cached and will be used automatically.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuickAnalysis()">
+                    <i class="fas fa-search me-2"></i>
+                    Analyze
+                </button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-@media print {
-    .navbar, .btn, .alert {
-        display: none !important;
-    }
-    
-    .main-content {
-        box-shadow: none !important;
-        background: white !important;
-    }
-    
-    .card {
-        border: 1px solid #ddd !important;
-        box-shadow: none !important;
-    }
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
