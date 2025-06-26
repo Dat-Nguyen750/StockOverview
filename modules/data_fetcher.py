@@ -38,7 +38,17 @@ class DataFetcher:
         params = {"apikey": self.fmp_api_key}
         
         data = await self._rate_limited_request(url, params)
-        return data[0] if data else {}
+        if data and isinstance(data, list) and len(data) > 0:
+            profile = data[0]
+            # If market cap or companyName is missing, mark as fallback
+            if not profile.get('mktCap') or not profile.get('companyName'):
+                profile['profile_freshness'] = 'fallback'
+            else:
+                profile['profile_freshness'] = 'fresh'
+            return profile
+        else:
+            # Return a fallback profile
+            return {'profile_freshness': 'fallback'}
 
     async def get_financial_statements(self, ticker: str, years: int = 5) -> Dict[str, List]:
         """Get income statement, balance sheet, and cash flow data"""
@@ -64,7 +74,18 @@ class DataFetcher:
         url = f"{self.fmp_base_url}/key-metrics/{ticker}"
         params = {"limit": years, "apikey": self.fmp_api_key}
         
-        return await self._rate_limited_request(url, params)
+        data = await self._rate_limited_request(url, params)
+        if data and isinstance(data, list) and len(data) > 0:
+            metrics = data
+            # If marketCap or revenuePerShare is missing, mark as fallback
+            if not metrics[0].get('marketCap') or not metrics[0].get('revenuePerShare'):
+                metrics[0]['metrics_freshness'] = 'fallback'
+            else:
+                metrics[0]['metrics_freshness'] = 'fresh'
+            return metrics
+        else:
+            # Return a fallback metrics dict
+            return [{ 'metrics_freshness': 'fallback' }]
 
     async def get_financial_ratios(self, ticker: str, years: int = 5) -> List[Dict]:
         """Get financial ratios"""

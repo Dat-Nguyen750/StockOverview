@@ -48,6 +48,14 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-10">
+        {% if result.data_freshness == 'fallback' %}
+        <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border: 2px solid #dc3545;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>
+                <strong>Warning:</strong> Your API is not working or returned incomplete data. The app is using fallback values. Please check your API keys or try again later for the most accurate results.
+            </div>
+        </div>
+        {% endif %}
         <!-- Header -->
         <div class="text-center mb-4">
             <h2 class="fw-bold text-dark">
@@ -60,18 +68,18 @@
         </div>
 
         <!-- Overall Score -->
-        <div class="card mb-4">
-            <div class="card-body text-center p-4">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h3 class="fw-bold mb-2">Overall Score</h3>
-                        <div class="display-4 fw-bold {% if result.composite_score >= 80 %}text-success{% elif result.composite_score >= 65 %}text-primary{% elif result.composite_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+        <div class="card mb-4 shadow-sm border-primary">
+            <div class="card-body text-center p-4 bg-light">
+                <div class="row align-items-center g-4">
+                    <div class="col-md-6 border-end">
+                        <h3 class="fw-bold mb-2 text-primary">Overall Score</h3>
+                        <div class="display-3 fw-bold mb-2 {% if result.composite_score >= 80 %}text-success{% elif result.composite_score >= 65 %}text-primary{% elif result.composite_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
                             {{ "%.1f"|format(result.composite_score) }}/100
                         </div>
                     </div>
                     <div class="col-md-6">
                         <h4 class="mb-2">Verdict</h4>
-                        <div class="badge {% if result.verdict == '✅ Investable' %}bg-success{% elif result.verdict == '⚠️ Cautious' %}bg-warning{% elif result.verdict == '❌ Avoid' %}bg-danger{% else %}bg-secondary{% endif %} fs-5 px-3 py-2">
+                        <div class="badge {% if result.verdict == '✅ Investable' %}bg-success{% elif result.verdict == '⚠️ Cautious' %}bg-warning{% elif result.verdict == '❌ Avoid' %}bg-danger{% else %}bg-secondary{% endif %} fs-4 px-4 py-3" data-bs-toggle="tooltip" title="This is an AI-generated investment verdict. Always do your own research!">
                             {{ result.verdict }}
                         </div>
                     </div>
@@ -80,24 +88,26 @@
         </div>
 
         <!-- Score Breakdown -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary bg-opacity-10 border-bottom border-primary">
                 <h5 class="mb-0">
                     <i class="fas fa-chart-bar me-2"></i>
                     Score Breakdown
                 </h5>
             </div>
-            <div class="card-body">
-                <div class="row">
+            <div class="card-body bg-light">
+                <div class="row g-3">
                     {% for category, score in result.score_breakdown.items() %}
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold">{{ category.replace('_', ' ').title() }}</span>
-                            <div class="d-flex align-items-center">
-                                <div class="progress me-2" style="width: 100px; height: 8px;">
-                                    <div class="progress-bar {% if score >= 80 %}bg-success{% elif score >= 65 %}bg-primary{% elif score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ score }}%"></div>
-                                </div>
-                                <span class="fw-bold">{{ score }}/100</span>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-3 rounded border h-100 d-flex flex-column justify-content-between bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-secondary">{{ category.replace('_', ' ').title() }}</span>
+                                <span class="badge {% if score >= 80 %}bg-success{% elif score >= 65 %}bg-primary{% elif score >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ score }}/100
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if score >= 80 %}bg-success{% elif score >= 65 %}bg-primary{% elif score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ score }}%"></div>
                             </div>
                         </div>
                     </div>
@@ -107,37 +117,36 @@
         </div>
 
         <!-- Explanation -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light border-bottom">
                 <h5 class="mb-0">
-                    <i class="fas fa-lightbulb me-2"></i>
+                    <i class="fas fa-lightbulb text-warning me-2"></i>
                     AI Analysis Summary
                 </h5>
             </div>
-            <div class="card-body">
-                <p class="mb-0">{{ result.explanation }}</p>
+            <div class="card-body bg-white">
+                <p class="mb-0 fs-5 text-dark">{{ result.explanation }}</p>
             </div>
         </div>
 
         <!-- Detailed Analysis -->
         {% if result.detailed_analysis %}
-        <div class="card mb-4">
-            <div class="card-header">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary bg-opacity-10 border-bottom border-primary">
                 <h5 class="mb-0">
                     <i class="fas fa-search-plus me-2"></i>
                     Detailed Analysis
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body bg-light">
                 {% for section, data in result.detailed_analysis.items() %}
-                <div class="mb-4">
-                    <h6 class="fw-bold text-primary">{{ section.replace('_', ' ').title() }}</h6>
-                    
+                <div class="mb-4 p-3 rounded bg-white shadow-sm border">
+                    <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">{{ section.replace('_', ' ').title() }}</h6>
                     <!-- Handle Scores -->
                     {% if data.scores %}
                     <div class="mb-3">
                         <h6 class="text-secondary">Scores:</h6>
-                        <div class="row">
+                        <div class="row g-2">
                             {% for metric, score in data.scores.items() %}
                             <div class="col-md-6 mb-2">
                                 <div class="d-flex justify-content-between">
@@ -149,12 +158,11 @@
                         </div>
                     </div>
                     {% endif %}
-                    
                     <!-- Handle Details -->
                     {% if data.details %}
                     <div class="mb-3">
                         <h6 class="text-secondary">Details:</h6>
-                        <div class="row">
+                        <div class="row g-2">
                             {% for metric, value in data.details.items() %}
                             <div class="col-md-6 mb-2">
                                 <div class="d-flex justify-content-between">
@@ -178,20 +186,50 @@
                         </div>
                     </div>
                     {% endif %}
-                    
                     <!-- Handle simple key-value pairs -->
                     {% if not data.scores and not data.details %}
                         {% if data is mapping %}
                             {% for key, value in data.items() %}
                             <div class="mb-3">
                                 <h6 class="text-secondary">{{ key.replace('_', ' ').title() }}:</h6>
-                                {% if value is string %}
-                                    <!-- Handle markdown-like formatting -->
-                                    {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
-                                    <div class="analysis-text">{{ formatted_text|safe }}</div>
+                                {% if value is string and (
+                                    key.lower() in [
+                                        'revenue model', 'competitive moat', 'industry position', 'management quality',
+                                        'tam assessment', 'growth initiatives'
+                                    ]
+                                ) %}
+                                    <div class="card border-primary mb-4" style="background: #f8fafd;">
+                                        <div class="card-body p-3">
+                                            <div class="fw-bold mb-2" style="font-size:1.1rem; color:#0d6efd;">{{ key.replace('_', ' ').replace(':', '').title() }}:</div>
+                                            <div style="margin-left:0.5rem;">{{ value }}</div>
+                                        </div>
+                                    </div>
+                                {% elif value is string and (
+                                    key.lower().endswith('model') or
+                                    key.lower().endswith('moat') or
+                                    key.lower().endswith('position') or
+                                    key.lower().endswith('quality') or
+                                    key.lower().endswith('assessment') or
+                                    key.lower().endswith('initiatives') or
+                                    key.lower().endswith('summary') or
+                                    key.lower().endswith('analysis')
+                                ) %}
+                                    <div class="fw-bold mt-4 mb-2" style="font-size:1.1rem;">{{ key.replace('_', ' ').replace(':', '').title() }}:</div>
+                                    <div class="mb-4" style="margin-left:0.5rem;">{{ value }}</div>
+                                {% elif key.lower() in ['identified red flags', 'positive indicators'] and value is iterable and value is not string %}
+                                    <div class="card border-warning mb-4" style="background: #fffbea;">
+                                        <div class="card-body p-3">
+                                            <div class="fw-bold mb-2" style="font-size:1.1rem; color:#b8860b;">{{ key.replace('_', ' ').replace(':', '').title() }}:</div>
+                                            <ul class="list-unstyled mb-0" style="margin-left:0.5rem;">
+                                                {% for item in value %}
+                                                <li><i class="fas fa-info-circle text-info me-2"></i>{{ item }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
                                 {% elif value is number %}
-                                    <div class="d-flex justify-content-between">
-                                        <span>Value:</span>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>{{ key.replace('_', ' ').title() }}:</span>
                                         <span class="fw-bold">
                                             {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
                                                 {{ "%.2f"|format(value) }}
@@ -205,29 +243,15 @@
                                 {% elif value is mapping %}
                                     <!-- Special handling for Key Metrics -->
                                     {% if key.lower() == 'key metrics' %}
-                                        <div class="key-metrics-grid">
-                                            {% for metric_name, metric_value in value.items() %}
-                                            <div class="metric-item">
-                                                <div class="metric-label">{{ metric_name.replace('_', ' ').title() }}</div>
-                                                <div class="metric-value">
-                                                    {% if metric_value is number %}
-                                                        {% if 'ratio' in metric_name.lower() or 'multiple' in metric_name.lower() or 'pe' in metric_name.lower() or 'pb' in metric_name.lower() or 'ps' in metric_name.lower() %}
-                                                            {{ "%.2f"|format(metric_value) }}
-                                                        {% elif 'yield' in metric_name.lower() or 'margin' in metric_name.lower() or 'roe' in metric_name.lower() or 'roic' in metric_name.lower() %}
-                                                            {{ "%.1f"|format(metric_value) }}%
-                                                        {% elif metric_value > 1000000 %}
-                                                            ${{ "{:,.1f}M".format(metric_value / 1000000) }}
-                                                        {% elif metric_value > 1000 %}
-                                                            ${{ "{:,.0f}K".format(metric_value / 1000) }}
-                                                        {% else %}
-                                                            ${{ "{:,.0f}".format(metric_value) }}
-                                                        {% endif %}
-                                                    {% else %}
-                                                        {{ metric_value }}
-                                                    {% endif %}
-                                                </div>
+                                        <div class="card border-info mb-4" style="background: #f8fbff;">
+                                            <div class="card-body p-3">
+                                                <div class="fw-bold mb-2" style="font-size:1.1rem; color:#0dcaf0;">Key Metrics:</div>
+                                                <ul class="mb-0 ps-3">
+                                                    {% for metric, metric_value in value.items() %}
+                                                    <li><span class="fw-bold">{{ metric.replace('_', ' ').title() }}</span>: {{ metric_value }}</li>
+                                                    {% endfor %}
+                                                </ul>
                                             </div>
-                                            {% endfor %}
                                         </div>
                                     {% else %}
                                         <div class="row">
@@ -254,21 +278,40 @@
                                         </div>
                                     {% endif %}
                                 {% elif value is iterable and value is not string %}
-                                    <!-- Handle lists -->
+                                    <!-- Handle lists (e.g., red flags, positive indicators) -->
                                     <ul class="list-unstyled mb-0">
                                         {% for item in value %}
                                         <li class="mb-1">
-                                            {% if key.lower() == 'key strengths' %}
-                                                <i class="fas fa-plus-circle text-success me-2"></i>
-                                            {% elif key.lower() == 'key concerns' %}
-                                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                                            {% else %}
-                                                <i class="fas fa-check text-success me-2"></i>
-                                            {% endif %}
-                                            {{ item }}
+                                            <i class="fas fa-info-circle text-info me-2"></i>{{ item }}
                                         </li>
                                         {% endfor %}
                                     </ul>
+                                {% elif value is mapping %}
+                                    <!-- Handle dicts (e.g., key metrics) -->
+                                    <div class="table-responsive mb-2">
+                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                            <tbody>
+                                                {% for k, v in value.items() %}
+                                                <tr>
+                                                    <th class="text-nowrap">{{ k.replace('_', ' ').title() }}</th>
+                                                    <td>
+                                                        {% if v is number %}
+                                                            {{ v }}
+                                                        {% elif v is iterable and v is not string %}
+                                                            <ul class="mb-0 ps-3">
+                                                                {% for subitem in v %}
+                                                                <li>{{ subitem }}</li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% else %}
+                                                            {{ v }}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 {% else %}
                                     <p class="mb-0">{{ value }}</p>
                                 {% endif %}
@@ -301,18 +344,18 @@
         {% endif %}
 
         <!-- Data Sources -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light border-bottom">
                 <h5 class="mb-0">
                     <i class="fas fa-database me-2"></i>
                     Data Sources
                 </h5>
             </div>
-            <div class="card-body">
-                <div class="row">
+            <div class="card-body bg-white">
+                <div class="row g-2">
                     {% for source in result.data_sources %}
                     <div class="col-md-4 mb-2">
-                        <span class="badge bg-light text-dark">
+                        <span class="badge bg-light text-dark border border-primary px-3 py-2">
                             <i class="fas fa-check-circle text-success me-1"></i>
                             {{ source }}
                         </span>
@@ -323,16 +366,16 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="text-center">
-            <a href="{{ url_for('evaluate') }}" class="btn btn-primary btn-lg me-3">
+        <div class="text-center mb-4">
+            <a href="{{ url_for('evaluate') }}" class="btn btn-primary btn-lg me-3 mb-2">
                 <i class="fas fa-search me-2"></i>
                 Analyze Another Stock
             </a>
-            <button onclick="quickAnalyze()" class="btn btn-outline-primary btn-lg me-3" id="quickAnalyzeBtn">
+            <button onclick="quickAnalyze()" class="btn btn-outline-primary btn-lg me-3 mb-2" id="quickAnalyzeBtn">
                 <i class="fas fa-bolt me-2"></i>
                 Quick Analyze Another
             </button>
-            <button onclick="window.print()" class="btn btn-outline-secondary btn-lg">
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-lg mb-2">
                 <i class="fas fa-print me-2"></i>
                 Print Report
             </button>
@@ -383,7 +426,7 @@
 
         <!-- Disclaimer -->
         <div class="mt-4">
-            <div class="alert alert-warning">
+            <div class="alert alert-warning shadow-sm">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <strong>Disclaimer:</strong> This analysis is for informational purposes only and should not be considered as financial advice. 
                 Always conduct your own research and consult with a financial advisor before making investment decisions.
