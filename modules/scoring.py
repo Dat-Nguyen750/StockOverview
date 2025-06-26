@@ -80,13 +80,13 @@ class FinancialScorer:
         latest_balance = statements.get("balance", [{}])[0] if statements.get("balance") else {}
         total_debt = latest_balance.get("totalDebt", 0)
         total_equity = latest_balance.get("totalStockholdersEquity", 1)
-        debt_to_equity = total_debt / total_equity if total_equity > 0 else float('inf')
+        debt_to_equity = total_debt / total_equity if total_equity > 0 else 999999.0
         details["debt_to_equity"] = debt_to_equity
         
         # Interest coverage
         ebit = latest_income.get("operatingIncome", 0)
         interest_expense = latest_income.get("interestExpense", 1)
-        interest_coverage = ebit / interest_expense if interest_expense > 0 else float('inf')
+        interest_coverage = ebit / interest_expense if interest_expense > 0 else 999999.0
         details["interest_coverage"] = interest_coverage
         
         debt_score = 0

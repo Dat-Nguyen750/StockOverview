@@ -12,6 +12,8 @@ import asyncio
 from dotenv import load_dotenv
 import os
 import time
+import json
+import math
 from contextlib import asynccontextmanager
 
 # Import after environment setup
@@ -20,6 +22,24 @@ load_dotenv("keys.env")
 from modules.evaluator import StockEvaluator
 from modules.models import EvaluationResponse, EvaluationRequest
 from config.settings import settings
+
+def sanitize_for_json(obj):
+    """
+    Recursively sanitize an object to ensure it's JSON serializable.
+    Replaces infinite values and NaN with safe alternatives.
+    """
+    if isinstance(obj, dict):
+        return {key: sanitize_for_json(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_for_json(item) for item in obj]
+    elif isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None  # Replace NaN and inf with None
+        return obj
+    elif isinstance(obj, (int, str, bool, type(None))):
+        return obj
+    else:
+        return str(obj)  # Convert any other types to string
 
 # Setup logging
 def setup_logging():
@@ -177,8 +197,11 @@ async def evaluate_stock(ticker: str) -> EvaluationResponse:
         
         result = await app.state.evaluator.evaluate_company(ticker)
         
+        # Sanitize the result to ensure JSON serialization
+        sanitized_result = sanitize_for_json(result)
+        
         try:
-            response = EvaluationResponse(**result)
+            response = EvaluationResponse(**sanitized_result)
             logger.info(f"Successfully evaluated {ticker}: {response.composite_score}/100")
             return response
         except Exception as validation_error:
@@ -206,7 +229,10 @@ async def evaluate_stock_post(request: EvaluationRequest) -> EvaluationResponse:
             custom_weights=request.custom_weights
         )
         
-        response = EvaluationResponse(**result)
+        # Sanitize the result to ensure JSON serialization
+        sanitized_result = sanitize_for_json(result)
+        
+        response = EvaluationResponse(**sanitized_result)
         logger.info(f"Successfully evaluated {request.ticker} via POST: {response.composite_score}/100")
         return response
     
