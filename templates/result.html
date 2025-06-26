@@ -42,6 +42,93 @@
         font-weight: 600;
         color: #212529;
     }
+    
+    /* Improved spacing and layout for detailed analysis */
+    .detailed-analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .analysis-section {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: box-shadow 0.2s ease;
+    }
+    
+    .analysis-section:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .analysis-section h6 {
+        color: #0d6efd;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .analysis-content {
+        line-height: 1.7;
+        color: #495057;
+    }
+    
+    /* Improved spacing for key-value pairs */
+    .key-value-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .key-value-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 0.375rem;
+        border-left: 3px solid #0d6efd;
+    }
+    
+    .key-value-label {
+        font-weight: 500;
+        color: #495057;
+        flex: 1;
+        margin-right: 1rem;
+    }
+    
+    .key-value-content {
+        font-weight: 600;
+        color: #212529;
+        text-align: right;
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+        .detailed-analysis-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .key-value-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .key-value-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        
+        .key-value-content {
+            text-align: left;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -129,37 +216,35 @@
                 </h5>
             </div>
             <div class="card-body">
-                {% for section, data in result.detailed_analysis.items() %}
-                <div class="mb-4">
-                    <h6 class="fw-bold text-primary">{{ section.replace('_', ' ').title() }}</h6>
-                    
-                    <!-- Handle Scores -->
-                    {% if data.scores %}
-                    <div class="mb-3">
-                        <h6 class="text-secondary">Scores:</h6>
-                        <div class="row">
-                            {% for metric, score in data.scores.items() %}
-                            <div class="col-md-6 mb-2">
-                                <div class="d-flex justify-content-between">
-                                    <span>{{ metric.replace('_', ' ').title() }}:</span>
-                                    <span class="fw-bold">{{ score }}/100</span>
+                <div class="detailed-analysis-grid">
+                    {% for section, data in result.detailed_analysis.items() %}
+                    <div class="analysis-section">
+                        <h6>{{ section.replace('_', ' ').title() }}</h6>
+                        
+                        <!-- Handle Scores -->
+                        {% if data.scores %}
+                        <div class="mb-3">
+                            <h6 class="text-secondary mb-2">Scores:</h6>
+                            <div class="key-value-grid">
+                                {% for metric, score in data.scores.items() %}
+                                <div class="key-value-item">
+                                    <span class="key-value-label">{{ metric.replace('_', ' ').title() }}</span>
+                                    <span class="key-value-content">{{ score }}/100</span>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Handle Details -->
-                    {% if data.details %}
-                    <div class="mb-3">
-                        <h6 class="text-secondary">Details:</h6>
-                        <div class="row">
-                            {% for metric, value in data.details.items() %}
-                            <div class="col-md-6 mb-2">
-                                <div class="d-flex justify-content-between">
-                                    <span>{{ metric.replace('_', ' ').title() }}:</span>
-                                    <span class="fw-bold">
+                        {% endif %}
+                        
+                        <!-- Handle Details -->
+                        {% if data.details %}
+                        <div class="mb-3">
+                            <h6 class="text-secondary mb-2">Details:</h6>
+                            <div class="key-value-grid">
+                                {% for metric, value in data.details.items() %}
+                                <div class="key-value-item">
+                                    <span class="key-value-label">{{ metric.replace('_', ' ').title() }}</span>
+                                    <span class="key-value-content">
                                         {% if value is number %}
                                             {% if 'ratio' in metric.lower() or 'multiple' in metric.lower() %}
                                                 {{ "%.2f"|format(value) }}
@@ -173,69 +258,75 @@
                                         {% endif %}
                                     </span>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Handle simple key-value pairs -->
-                    {% if not data.scores and not data.details %}
-                        {% if data is mapping %}
-                            {% for key, value in data.items() %}
-                            <div class="mb-3">
-                                <h6 class="text-secondary">{{ key.replace('_', ' ').title() }}:</h6>
-                                {% if value is string %}
-                                    <!-- Handle markdown-like formatting -->
-                                    {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
-                                    <div class="analysis-text">{{ formatted_text|safe }}</div>
-                                {% elif value is number %}
-                                    <div class="d-flex justify-content-between">
-                                        <span>Value:</span>
-                                        <span class="fw-bold">
-                                            {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
-                                                {{ "%.2f"|format(value) }}
-                                            {% elif 'cagr' in key.lower() or 'margin' in key.lower() or 'roe' in key.lower() %}
-                                                {{ "%.1f"|format(value) }}%
-                                            {% else %}
-                                                {{ "{:,.0f}".format(value) }}
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                {% elif value is mapping %}
-                                    <!-- Special handling for Key Metrics -->
-                                    {% if key.lower() == 'key metrics' %}
-                                        <div class="key-metrics-grid">
-                                            {% for metric_name, metric_value in value.items() %}
-                                            <div class="metric-item">
-                                                <div class="metric-label">{{ metric_name.replace('_', ' ').title() }}</div>
-                                                <div class="metric-value">
-                                                    {% if metric_value is number %}
-                                                        {% if 'ratio' in metric_name.lower() or 'multiple' in metric_name.lower() or 'pe' in metric_name.lower() or 'pb' in metric_name.lower() or 'ps' in metric_name.lower() %}
-                                                            {{ "%.2f"|format(metric_value) }}
-                                                        {% elif 'yield' in metric_name.lower() or 'margin' in metric_name.lower() or 'roe' in metric_name.lower() or 'roic' in metric_name.lower() %}
-                                                            {{ "%.1f"|format(metric_value) }}%
-                                                        {% elif metric_value > 1000000 %}
-                                                            ${{ "{:,.1f}M".format(metric_value / 1000000) }}
-                                                        {% elif metric_value > 1000 %}
-                                                            ${{ "{:,.0f}K".format(metric_value / 1000) }}
-                                                        {% else %}
-                                                            ${{ "{:,.0f}".format(metric_value) }}
-                                                        {% endif %}
-                                                    {% else %}
-                                                        {{ metric_value }}
-                                                    {% endif %}
-                                                </div>
+                        {% endif %}
+                        
+                        <!-- Handle simple key-value pairs -->
+                        {% if not data.scores and not data.details %}
+                            {% if data is mapping %}
+                                {% for key, value in data.items() %}
+                                <div class="mb-3">
+                                    <h6 class="text-secondary mb-2">{{ key.replace('_', ' ').title() }}:</h6>
+                                    {% if value is string %}
+                                        <!-- Handle long paragraphs - put in their own box -->
+                                        {% if key.lower() in ['tam assessment', 'growth initiative', 'management quality', 'competitive moat', 'revenue model', 'industry position'] %}
+                                            <div class="analysis-content">
+                                                {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
+                                                {{ formatted_text|safe }}
                                             </div>
-                                            {% endfor %}
+                                        {% else %}
+                                            <!-- Handle markdown-like formatting for other content -->
+                                            {% set formatted_text = value.replace('* **', '<strong>').replace('**', '</strong>').replace('* ', '<br>• ') %}
+                                            <div class="analysis-text">{{ formatted_text|safe }}</div>
+                                        {% endif %}
+                                    {% elif value is number %}
+                                        <div class="key-value-item">
+                                            <span class="key-value-label">Value</span>
+                                            <span class="key-value-content">
+                                                {% if 'ratio' in key.lower() or 'multiple' in key.lower() %}
+                                                    {{ "%.2f"|format(value) }}
+                                                {% elif 'cagr' in key.lower() or 'margin' in key.lower() or 'roe' in key.lower() %}
+                                                    {{ "%.1f"|format(value) }}%
+                                                {% else %}
+                                                    {{ "{:,.0f}".format(value) }}
+                                                {% endif %}
+                                            </span>
                                         </div>
-                                    {% else %}
-                                        <div class="row">
-                                            {% for sub_key, sub_value in value.items() %}
-                                            <div class="col-md-6 mb-2">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>{{ sub_key.replace('_', ' ').title() }}:</span>
-                                                    <span class="fw-bold">
+                                    {% elif value is mapping %}
+                                        <!-- Special handling for Key Metrics -->
+                                        {% if key.lower() == 'key metrics' %}
+                                            <div class="key-metrics-grid">
+                                                {% for metric_name, metric_value in value.items() %}
+                                                <div class="metric-item">
+                                                    <div class="metric-label">{{ metric_name.replace('_', ' ').title() }}</div>
+                                                    <div class="metric-value">
+                                                        {% if metric_value is number %}
+                                                            {% if 'ratio' in metric_name.lower() or 'multiple' in metric_name.lower() or 'pe' in metric_name.lower() or 'pb' in metric_name.lower() or 'ps' in metric_name.lower() %}
+                                                                {{ "%.2f"|format(metric_value) }}
+                                                            {% elif 'yield' in metric_name.lower() or 'margin' in metric_name.lower() or 'roe' in metric_name.lower() or 'roic' in metric_name.lower() %}
+                                                                {{ "%.1f"|format(metric_value) }}%
+                                                            {% elif metric_value > 1000000 %}
+                                                                ${{ "{:,.1f}M".format(metric_value / 1000000) }}
+                                                            {% elif metric_value > 1000 %}
+                                                                ${{ "{:,.0f}K".format(metric_value / 1000) }}
+                                                            {% else %}
+                                                                ${{ "{:,.0f}".format(metric_value) }}
+                                                            {% endif %}
+                                                        {% else %}
+                                                            {{ metric_value }}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="key-value-grid">
+                                                {% for sub_key, sub_value in value.items() %}
+                                                <div class="key-value-item">
+                                                    <span class="key-value-label">{{ sub_key.replace('_', ' ').title() }}</span>
+                                                    <span class="key-value-content">
                                                         {% if sub_value is number %}
                                                             {% if 'ratio' in sub_key.lower() or 'multiple' in sub_key.lower() %}
                                                                 {{ "%.2f"|format(sub_value) }}
@@ -249,53 +340,53 @@
                                                         {% endif %}
                                                     </span>
                                                 </div>
+                                                {% endfor %}
                                             </div>
+                                        {% endif %}
+                                    {% elif value is iterable and value is not string %}
+                                        <!-- Handle lists -->
+                                        <ul class="list-unstyled mb-0">
+                                            {% for item in value %}
+                                            <li class="mb-1">
+                                                {% if key.lower() == 'key strengths' %}
+                                                    <i class="fas fa-plus-circle text-success me-2"></i>
+                                                {% elif key.lower() == 'key concerns' %}
+                                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                                {% else %}
+                                                    <i class="fas fa-check text-success me-2"></i>
+                                                {% endif %}
+                                                {{ item }}
+                                            </li>
                                             {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                {% elif value is iterable and value is not string %}
-                                    <!-- Handle lists -->
-                                    <ul class="list-unstyled mb-0">
-                                        {% for item in value %}
-                                        <li class="mb-1">
-                                            {% if key.lower() == 'key strengths' %}
-                                                <i class="fas fa-plus-circle text-success me-2"></i>
-                                            {% elif key.lower() == 'key concerns' %}
-                                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                                            {% else %}
-                                                <i class="fas fa-check text-success me-2"></i>
-                                            {% endif %}
-                                            {{ item }}
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    <p class="mb-0">{{ value }}</p>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        {% elif data is iterable and data is not string %}
-                            <!-- Handle top-level lists -->
-                            <ul class="list-unstyled mb-0">
-                                {% for item in data %}
-                                <li class="mb-2">
-                                    {% if item is string %}
-                                        <i class="fas fa-info-circle text-info me-2"></i>
-                                        {{ item }}
+                                        </ul>
                                     {% else %}
-                                        {{ item }}
+                                        <p class="mb-0">{{ value }}</p>
                                     {% endif %}
-                                </li>
+                                </div>
                                 {% endfor %}
-                            </ul>
-                        {% else %}
-                            <div class="mb-2">
-                                <p class="mb-0">{{ data }}</p>
-                            </div>
+                            {% elif data is iterable and data is not string %}
+                                <!-- Handle top-level lists -->
+                                <ul class="list-unstyled mb-0">
+                                    {% for item in data %}
+                                    <li class="mb-2">
+                                        {% if item is string %}
+                                            <i class="fas fa-info-circle text-info me-2"></i>
+                                            {{ item }}
+                                        {% else %}
+                                            {{ item }}
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="mb-2">
+                                    <p class="mb-0">{{ data }}</p>
+                                </div>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
         {% endif %}
