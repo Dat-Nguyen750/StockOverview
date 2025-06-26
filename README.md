@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Stock Evaluator Pro - AI-Powered Investment Analysis
 
 A comprehensive AI-powered web application for evaluating publicly traded companies for long-term investment potential. This application is designed for production deployment with enterprise-grade features and can be easily deployed to Railway.
@@ -259,3 +260,7 @@ To update your Railway deployment:
 - [x] Documentation updated
 
 Your Stock Evaluator Pro is now ready for production use on Railway! Users can visit your Railway URL, get their own API keys, and start analyzing stocks immediately. 
+=======
+# StockOverview
+A tool that automatically researches and analyzes stock information
+>>>>>>> 2c1dde0bccdb9210ac947ad672c6043c30da5394
