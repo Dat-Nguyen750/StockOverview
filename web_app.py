@@ -39,6 +39,13 @@ limiter = Limiter(
 # Configuration
 API_BASE_URL = os.environ.get('API_BASE_URL', 'http://localhost:8000')
 
+# Remove trailing slash if present to avoid double slashes
+if API_BASE_URL.endswith('/'):
+    API_BASE_URL = API_BASE_URL[:-1]
+
+# Log the API base URL for debugging (without sensitive info)
+logger.info(f"API_BASE_URL configured as: {API_BASE_URL}")
+
 # Abuse prevention settings
 MAX_REQUESTS_PER_IP_PER_HOUR = 20
 MAX_REQUESTS_PER_IP_PER_DAY = 100
@@ -216,8 +223,20 @@ def evaluate():
                 
         except requests.exceptions.RequestException as e:
             logger.error(f"CONNECTION_ERROR: {ip_address} - {ticker} - {str(e)}")
-            flash(f'Connection error: {str(e)}', 'error')
+            
+            # Provide more specific error messages
+            if "Connection refused" in str(e) or "Name or service not known" in str(e):
+                flash(f'Cannot connect to backend API at {API_BASE_URL}. Please check your deployment configuration.', 'error')
+            elif "timeout" in str(e).lower():
+                flash('Request timed out. The backend API is taking too long to respond.', 'error')
+            else:
+                flash(f'Connection error: {str(e)}', 'error')
+            
             return render_template('evaluate.html')
+            
+        except Exception as e:
+            logger.error(f"API_EXCEPTION: {get_remote_address()} - {str(e)}")
+            return jsonify({'error': str(e)}), 500
     
     return render_template('evaluate.html')
 
@@ -277,6 +296,17 @@ def api_evaluate():
             error_data = response.json() if response.headers.get('content-type') == 'application/json' else {'detail': 'API Error'}
             logger.error(f"API_EVALUATION_ERROR: {ip_address} - {ticker} - {response.status_code}")
             return jsonify(error_data), response.status_code
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"API_CONNECTION_ERROR: {get_remote_address()} - {ticker} - {str(e)}")
+        
+        # Provide more specific error messages
+        if "Connection refused" in str(e) or "Name or service not known" in str(e):
+            return jsonify({'error': f'Cannot connect to backend API at {API_BASE_URL}. Please check your deployment configuration.'}), 503
+        elif "timeout" in str(e).lower():
+            return jsonify({'error': 'Request timed out. The backend API is taking too long to respond.'}), 504
+        else:
+            return jsonify({'error': f'Connection error: {str(e)}'}), 503
             
     except Exception as e:
         logger.error(f"API_EXCEPTION: {get_remote_address()} - {str(e)}")
