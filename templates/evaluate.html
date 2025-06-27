@@ -2,182 +2,607 @@
 
 {% block title %}Stock Analysis - StockOverview{% endblock %}
 
+{% block extra_css %}
+<style>
+    .evaluate-container {
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: var(--border-radius-lg);
+        border: 1px solid #e2e8f0;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: var(--secondary-color);
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .form-section:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .form-section-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin: -2rem -2rem 2rem -2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .form-control {
+        border-radius: var(--border-radius);
+        border: 2px solid #e2e8f0;
+        padding: 1rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-control-lg {
+        padding: 1.25rem 1.5rem;
+        font-size: 1.125rem;
+    }
+
+    .input-group {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .input-group .form-control {
+        border: none;
+        border-radius: 0;
+    }
+
+    .input-group .btn {
+        border: none;
+        background: #f8fafc;
+        color: var(--secondary-color);
+        padding: 1rem 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .input-group .btn:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: var(--secondary-color);
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    .form-text a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .form-text a:hover {
+        text-decoration: underline;
+    }
+
+    .api-keys-section {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .api-keys-header {
+        font-weight: 800;
+        color: var(--dark-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.25rem;
+    }
+
+    .api-key-group {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+    }
+
+    .api-key-group:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .api-key-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .api-key-label {
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .api-key-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        color: white;
+    }
+
+    .api-key-icon.fmp {
+        background: var(--success-color);
+    }
+
+    .api-key-icon.serp {
+        background: var(--info-color);
+    }
+
+    .api-key-icon.gemini {
+        background: var(--warning-color);
+    }
+
+    .cache-status {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(6, 182, 212, 0.05));
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        border-radius: var(--border-radius);
+        padding: 1rem 1.5rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .cache-status-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--info-color);
+        font-weight: 600;
+    }
+
+    .clear-cache-btn {
+        background: var(--info-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .clear-cache-btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .submit-section {
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: var(--border-radius-lg);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 2rem;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        padding: 1.25rem 3rem;
+        font-size: 1.125rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .submit-btn:hover {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        text-align: center;
+        box-shadow: var(--shadow-md);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .info-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    }
+
+    .info-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .info-card-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem auto;
+        font-size: 1.5rem;
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .info-card-icon.security {
+        background: linear-gradient(135deg, var(--success-color), #059669);
+    }
+
+    .info-card-icon.speed {
+        background: linear-gradient(135deg, var(--info-color), #0891b2);
+    }
+
+    .info-card-title {
+        font-weight: 800;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+    }
+
+    .info-card-text {
+        color: var(--secondary-color);
+        line-height: 1.6;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .disclaimer-section {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: 2px solid #f59e0b;
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .disclaimer-icon {
+        color: #d97706;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+
+    .disclaimer-content {
+        flex: 1;
+    }
+
+    .disclaimer-title {
+        font-weight: 800;
+        color: #92400e;
+        margin-bottom: 0.75rem;
+        font-size: 1.25rem;
+    }
+
+    .disclaimer-text {
+        color: #78350f;
+        margin: 0;
+        line-height: 1.6;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .evaluate-container {
+            padding: 1rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .form-section {
+            padding: 1.5rem;
+        }
+
+        .form-section-header {
+            margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+            padding: 1.25rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .info-cards {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <!-- Header -->
-        <div class="text-center mb-4">
-            <h2 class="fw-bold text-dark">
-                <i class="fas fa-search text-primary me-2"></i>
-                Stock Analysis
-            </h2>
-            <p class="text-muted">
-                Enter a stock ticker and your API keys to get a comprehensive analysis
-            </p>
-        </div>
+<div class="evaluate-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-search"></i>
+            Stock Analysis
+        </h1>
+        <p class="page-subtitle">
+            Enter a stock ticker and your API keys to get a comprehensive analysis
+        </p>
+    </div>
 
+    <div class="form-container">
         <!-- Analysis Form -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-line me-2"></i>
-                    Analysis Parameters
-                </h5>
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="fas fa-chart-line"></i>
+                Analysis Parameters
             </div>
-            <div class="card-body">
-                <form method="POST" id="analysisForm">
-                    <!-- Stock Ticker -->
-                    <div class="mb-4">
-                        <label for="ticker" class="form-label fw-bold">
-                            <i class="fas fa-tag me-2"></i>
-                            Stock Ticker Symbol
-                        </label>
-                        <input type="text" 
-                               class="form-control form-control-lg" 
-                               id="ticker" 
-                               name="ticker" 
-                               placeholder="e.g., AAPL, MSFT, GOOGL"
-                               required
-                               maxlength="10"
-                               pattern="[A-Za-z]{1,10}"
-                               title="Please enter a valid stock ticker (1-10 letters)">
-                        <div class="form-text">
-                            Enter the stock symbol you want to analyze (e.g., AAPL for Apple Inc.)
-                        </div>
+
+            <form method="POST" id="analysisForm">
+                <!-- Stock Ticker -->
+                <div class="form-group">
+                    <label for="ticker" class="form-label">
+                        <i class="fas fa-tag"></i>
+                        Stock Ticker Symbol
+                    </label>
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           id="ticker" 
+                           name="ticker" 
+                           placeholder="e.g., AAPL, MSFT, GOOGL"
+                           required
+                           maxlength="10"
+                           pattern="[A-Za-z]{1,10}"
+                           title="Please enter a valid stock ticker (1-10 letters)">
+                    <div class="form-text">
+                        Enter the stock symbol you want to analyze (e.g., AAPL for Apple Inc.)
                     </div>
+                </div>
 
-                    <!-- API Keys Section -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold mb-3">
-                            <i class="fas fa-key me-2"></i>
-                            API Keys Required
-                        </h6>
-                        
-                        <!-- Financial Modeling Prep API Key -->
-                        <div class="mb-3">
-                            <label for="fmp_key" class="form-label">
-                                <i class="fas fa-chart-line text-success me-2"></i>
-                                Financial Modeling Prep API Key
-                            </label>
-                            <div class="input-group">
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="fmp_key" 
-                                       name="fmp_key" 
-                                       placeholder="Enter your FMP API key"
-                                       required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('fmp_key')">
-                                    <i class="fas fa-eye" id="fmp_key_icon"></i>
-                                </button>
+                <!-- API Keys Section -->
+                <div class="api-keys-section">
+                    <div class="api-keys-header">
+                        <i class="fas fa-key"></i>
+                        API Keys Required
+                    </div>
+                    
+                    <!-- Financial Modeling Prep API Key -->
+                    <div class="api-key-group">
+                        <label for="fmp_key" class="api-key-label">
+                            <div class="api-key-icon fmp">
+                                <i class="fas fa-chart-line"></i>
                             </div>
-                            <div class="form-text">
-                                <a href="https://financialmodelingprep.com/developer/docs/" target="_blank">
-                                    Get your free API key here
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- SERP API Key -->
-                        <div class="mb-3">
-                            <label for="serp_key" class="form-label">
-                                <i class="fas fa-search text-info me-2"></i>
-                                SERP API Key
-                            </label>
-                            <div class="input-group">
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="serp_key" 
-                                       name="serp_key" 
-                                       placeholder="Enter your SERP API key"
-                                       required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('serp_key')">
-                                    <i class="fas fa-eye" id="serp_key_icon"></i>
-                                </button>
-                            </div>
-                            <div class="form-text">
-                                <a href="https://serpapi.com/" target="_blank">
-                                    Get your API key here
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Google Gemini API Key -->
-                        <div class="mb-3">
-                            <label for="gemini_key" class="form-label">
-                                <i class="fas fa-robot text-warning me-2"></i>
-                                Google Gemini API Key
-                            </label>
-                            <div class="input-group">
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="gemini_key" 
-                                       name="gemini_key" 
-                                       placeholder="Enter your Gemini API key"
-                                       required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('gemini_key')">
-                                    <i class="fas fa-eye" id="gemini_key_icon"></i>
-                                </button>
-                            </div>
-                            <div class="form-text">
-                                <a href="https://ai.google.dev/" target="_blank">
-                                    Get your API key here
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Cache Status -->
-                        <div class="alert alert-info" id="cacheStatus" style="display: none;">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <span id="cacheStatusText"></span>
-                            <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="clearCache()">
-                                <i class="fas fa-trash me-1"></i>Clear Cache
+                            Financial Modeling Prep API Key
+                        </label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="fmp_key" 
+                                   name="fmp_key" 
+                                   placeholder="Enter your FMP API key"
+                                   required>
+                            <button class="btn" type="button" onclick="togglePasswordVisibility('fmp_key')">
+                                <i class="fas fa-eye" id="fmp_key_icon"></i>
                             </button>
                         </div>
+                        <div class="form-text">
+                            <a href="https://financialmodelingprep.com/developer/docs/" target="_blank">
+                                Get your free API key here
+                            </a>
+                        </div>
                     </div>
 
-                    <!-- Submit Button -->
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                            <i class="fas fa-search me-2"></i>
-                            Analyze Stock
+                    <!-- SERP API Key -->
+                    <div class="api-key-group">
+                        <label for="serp_key" class="api-key-label">
+                            <div class="api-key-icon serp">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            SERP API Key
+                        </label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="serp_key" 
+                                   name="serp_key" 
+                                   placeholder="Enter your SERP API key"
+                                   required>
+                            <button class="btn" type="button" onclick="togglePasswordVisibility('serp_key')">
+                                <i class="fas fa-eye" id="serp_key_icon"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <a href="https://serpapi.com/" target="_blank">
+                                Get your API key here
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Google Gemini API Key -->
+                    <div class="api-key-group">
+                        <label for="gemini_key" class="api-key-label">
+                            <div class="api-key-icon gemini">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            Google Gemini API Key
+                        </label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="gemini_key" 
+                                   name="gemini_key" 
+                                   placeholder="Enter your Gemini API key"
+                                   required>
+                            <button class="btn" type="button" onclick="togglePasswordVisibility('gemini_key')">
+                                <i class="fas fa-eye" id="gemini_key_icon"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <a href="https://ai.google.dev/" target="_blank">
+                                Get your API key here
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Cache Status -->
+                    <div class="cache-status" id="cacheStatus" style="display: none;">
+                        <div class="cache-status-content">
+                            <i class="fas fa-info-circle"></i>
+                            <span id="cacheStatusText"></span>
+                        </div>
+                        <button type="button" class="clear-cache-btn" onclick="clearCache()">
+                            <i class="fas fa-trash"></i>
+                            Clear Cache
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="submit-section">
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <i class="fas fa-search"></i>
+                        Analyze Stock
+                    </button>
+                </div>
+            </form>
         </div>
 
         <!-- Information Cards -->
-        <div class="row mt-5">
-            <div class="col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-shield-alt text-success mb-3" style="font-size: 2rem;"></i>
-                        <h6 class="card-title">Secure & Private</h6>
-                        <p class="card-text small">
-                            Your API keys are never stored on our servers. They're cached locally in your browser and automatically cleared when you close the tab.
-                        </p>
-                    </div>
+        <div class="info-cards">
+            <div class="info-card">
+                <div class="info-card-icon security">
+                    <i class="fas fa-shield-alt"></i>
                 </div>
+                <h6 class="info-card-title">Secure & Private</h6>
+                <p class="info-card-text">
+                    Your API keys are never stored on our servers. They're cached locally in your browser and automatically cleared when you close the tab.
+                </p>
             </div>
-            <div class="col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-clock text-info mb-3" style="font-size: 2rem;"></i>
-                        <h6 class="card-title">Fast Analysis</h6>
-                        <p class="card-text small">
-                            Get comprehensive results in under 30 seconds with our optimized analysis pipeline.
-                        </p>
-                    </div>
+            <div class="info-card">
+                <div class="info-card-icon speed">
+                    <i class="fas fa-clock"></i>
                 </div>
+                <h6 class="info-card-title">Fast Analysis</h6>
+                <p class="info-card-text">
+                    Get comprehensive results in under 30 seconds with our optimized analysis pipeline.
+                </p>
             </div>
         </div>
 
         <!-- Disclaimer -->
-        <div class="mt-4">
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Disclaimer:</strong> This analysis is for informational purposes only and should not be considered as financial advice. 
-                Always conduct your own research and consult with a financial advisor before making investment decisions.
+        <div class="disclaimer-section">
+            <i class="fas fa-exclamation-triangle disclaimer-icon"></i>
+            <div class="disclaimer-content">
+                <div class="disclaimer-title">Disclaimer</div>
+                <p class="disclaimer-text">
+                    This analysis is for informational purposes only and should not be considered as financial advice. 
+                    Always conduct your own research and consult with a financial advisor before making investment decisions.
+                </p>
             </div>
         </div>
     </div>
@@ -199,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCacheStatus();
 });
 
-// Load cached API keys from session storage
+// Load cached API keys into form
 function loadCachedKeys() {
     const fmpKey = sessionStorage.getItem(CACHE_KEYS.FMP_KEY);
     const serpKey = sessionStorage.getItem(CACHE_KEYS.SERP_KEY);
@@ -208,48 +633,6 @@ function loadCachedKeys() {
     if (fmpKey) document.getElementById('fmp_key').value = fmpKey;
     if (serpKey) document.getElementById('serp_key').value = serpKey;
     if (geminiKey) document.getElementById('gemini_key').value = geminiKey;
-}
-
-// Save API keys to session storage
-function saveKeysToCache() {
-    const fmpKey = document.getElementById('fmp_key').value;
-    const serpKey = document.getElementById('serp_key').value;
-    const geminiKey = document.getElementById('gemini_key').value;
-    
-    if (fmpKey) sessionStorage.setItem(CACHE_KEYS.FMP_KEY, fmpKey);
-    if (serpKey) sessionStorage.setItem(CACHE_KEYS.SERP_KEY, serpKey);
-    if (geminiKey) sessionStorage.setItem(CACHE_KEYS.GEMINI_KEY, geminiKey);
-}
-
-// Clear all cached keys
-function clearCache() {
-    sessionStorage.removeItem(CACHE_KEYS.FMP_KEY);
-    sessionStorage.removeItem(CACHE_KEYS.SERP_KEY);
-    sessionStorage.removeItem(CACHE_KEYS.GEMINI_KEY);
-    
-    // Clear form fields
-    document.getElementById('fmp_key').value = '';
-    document.getElementById('serp_key').value = '';
-    document.getElementById('gemini_key').value = '';
-    
-    updateCacheStatus();
-    
-    // Show confirmation
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-success alert-dismissible fade show';
-    alert.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        API keys cleared from cache successfully.
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.getElementById('cacheStatus').parentNode.insertBefore(alert, document.getElementById('cacheStatus'));
-    
-    // Auto-dismiss after 3 seconds
-    setTimeout(() => {
-        if (alert.parentNode) {
-            alert.remove();
-        }
-    }, 3000);
 }
 
 // Update cache status display
@@ -263,11 +646,36 @@ function updateCacheStatus() {
     
     if (fmpKey || serpKey || geminiKey) {
         const cachedCount = [fmpKey, serpKey, geminiKey].filter(key => key).length;
-        cacheStatusText.textContent = `${cachedCount} API key${cachedCount > 1 ? 's' : ''} cached in your browser session. Keys will be automatically cleared when you close this tab.`;
-        cacheStatus.style.display = 'block';
+        cacheStatusText.textContent = `${cachedCount} API key${cachedCount > 1 ? 's' : ''} cached in your browser`;
+        cacheStatus.style.display = 'flex';
     } else {
         cacheStatus.style.display = 'none';
     }
+}
+
+// Clear all cached API keys
+function clearCache() {
+    sessionStorage.removeItem(CACHE_KEYS.FMP_KEY);
+    sessionStorage.removeItem(CACHE_KEYS.SERP_KEY);
+    sessionStorage.removeItem(CACHE_KEYS.GEMINI_KEY);
+    
+    // Clear form fields
+    document.getElementById('fmp_key').value = '';
+    document.getElementById('serp_key').value = '';
+    document.getElementById('gemini_key').value = '';
+    
+    updateCacheStatus();
+    
+    // Show feedback
+    const clearBtn = document.querySelector('.clear-cache-btn');
+    const originalText = clearBtn.innerHTML;
+    clearBtn.innerHTML = '<i class="fas fa-check"></i>Cleared!';
+    clearBtn.style.background = 'var(--success-color)';
+    
+    setTimeout(() => {
+        clearBtn.innerHTML = originalText;
+        clearBtn.style.background = '';
+    }, 2000);
 }
 
 // Toggle password visibility
@@ -284,45 +692,33 @@ function togglePasswordVisibility(fieldId) {
     }
 }
 
-// Form submission handler
+// Form submission handling
 document.getElementById('analysisForm').addEventListener('submit', function(e) {
-    const submitBtn = document.getElementById('submitBtn');
-    const originalText = submitBtn.innerHTML;
+    // Cache API keys before submission
+    const fmpKey = document.getElementById('fmp_key').value;
+    const serpKey = document.getElementById('serp_key').value;
+    const geminiKey = document.getElementById('gemini_key').value;
     
-    // Save keys to cache before submitting
-    saveKeysToCache();
-    updateCacheStatus();
+    if (fmpKey) sessionStorage.setItem(CACHE_KEYS.FMP_KEY, fmpKey);
+    if (serpKey) sessionStorage.setItem(CACHE_KEYS.SERP_KEY, serpKey);
+    if (geminiKey) sessionStorage.setItem(CACHE_KEYS.GEMINI_KEY, geminiKey);
     
     // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Analyzing...';
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing...';
     
-    // Re-enable after 30 seconds as fallback
-    setTimeout(function() {
-        submitBtn.disabled = false;
+    // Re-enable button after a delay (in case of errors)
+    setTimeout(() => {
         submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }, 30000);
 });
 
 // Auto-format ticker input
 document.getElementById('ticker').addEventListener('input', function(e) {
     this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '');
-});
-
-// Save keys to cache when user types in them
-document.getElementById('fmp_key').addEventListener('input', function() {
-    setTimeout(saveKeysToCache, 500); // Debounce
-    setTimeout(updateCacheStatus, 500);
-});
-
-document.getElementById('serp_key').addEventListener('input', function() {
-    setTimeout(saveKeysToCache, 500); // Debounce
-    setTimeout(updateCacheStatus, 500);
-});
-
-document.getElementById('gemini_key').addEventListener('input', function() {
-    setTimeout(saveKeysToCache, 500); // Debounce
-    setTimeout(updateCacheStatus, 500);
 });
 </script>
 {% endblock %} 
