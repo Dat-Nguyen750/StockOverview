@@ -105,6 +105,27 @@ class LLMOrchestrator:
             
             return result
         except Exception as e:
+            # Check for quota exceeded error
+            error_str = str(e)
+            if "429" in error_str or "quota" in error_str.lower() or "exceeded" in error_str.lower():
+                print(f"Gemini API quota exceeded: {e}")
+                return {
+                    "revenue_model_score": 15,
+                    "competitive_moat_score": 15,
+                    "industry_position_score": 15,
+                    "management_quality_score": 15,
+                    "total_score": 60,
+                    "analysis": {
+                        "revenue_model": "Analysis unavailable - API quota exceeded",
+                        "competitive_moat": "Analysis unavailable - API quota exceeded",
+                        "industry_position": "Analysis unavailable - API quota exceeded",
+                        "management_quality": "Analysis unavailable - API quota exceeded"
+                    },
+                    "key_strengths": ["Analysis unavailable - API quota exceeded"],
+                    "key_concerns": ["Analysis unavailable - API quota exceeded"]
+                }
+            
+            # General fallback for other errors
             fallback = {
                 "revenue_model_score": 15,
                 "competitive_moat_score": 15,
@@ -199,6 +220,21 @@ class LLMOrchestrator:
             
             return result
         except Exception as e:
+            # Check for quota exceeded error
+            error_str = str(e)
+            if "429" in error_str or "quota" in error_str.lower() or "exceeded" in error_str.lower():
+                print(f"Gemini API quota exceeded: {e}")
+                return {
+                    "tam_score": 25,
+                    "growth_initiatives_score": 25,
+                    "total_score": 50,
+                    "analysis": {
+                        "tam_assessment": "Analysis unavailable - API quota exceeded",
+                        "growth_initiatives": "Analysis unavailable - API quota exceeded"
+                    }
+                }
+            
+            # General fallback for other errors
             fallback = {
                 "tam_score": 25,
                 "growth_initiatives_score": 25,
@@ -293,6 +329,22 @@ class LLMOrchestrator:
             
             return result
         except Exception as e:
+            # Check for quota exceeded error
+            error_str = str(e)
+            if "429" in error_str or "quota" in error_str.lower() or "exceeded" in error_str.lower():
+                print(f"Gemini API quota exceeded: {e}")
+                return {
+                    "news_sentiment_score": 25,
+                    "red_flags_score": 40,
+                    "total_score": 65,
+                    "analysis": {
+                        "sentiment_summary": "Analysis unavailable - API quota exceeded",
+                        "identified_red_flags": ["Analysis unavailable - API quota exceeded"],
+                        "positive_indicators": ["Analysis unavailable - API quota exceeded"]
+                    }
+                }
+            
+            # General fallback for other errors
             fallback = {
                 "news_sentiment_score": 25,
                 "red_flags_score": 40,

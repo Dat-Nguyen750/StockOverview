@@ -588,11 +588,11 @@
                                     {% if value is string %}
                                         {% if key.lower() in ['tam assessment', 'growth initiative', 'management quality', 'competitive moat', 'revenue model', 'industry position'] %}
                                             <div class="content-text">
-                                                {{ value|replace('* **', '').replace('**', '').replace('* ', '• ') }}
+                                                {{ value|replace('* **', '')|replace('**', '')|replace('* ', '• ') }}
                                             </div>
                                         {% else %}
                                             <div class="content-text">
-                                                {{ value|replace('* **', '').replace('**', '').replace('* ', '• ') }}
+                                                {{ value|replace('* **', '')|replace('**', '')|replace('* ', '• ') }}
                                             </div>
                                         {% endif %}
                                     {% elif value is number %}
