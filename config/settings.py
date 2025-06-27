@@ -23,7 +23,9 @@ class Settings:
     WORKERS: int = int(os.getenv("WORKERS", 4))
     
     # Rate Limiting
-    FMP_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("FMP_RATE_LIMIT_PER_MINUTE", 15))
+    FMP_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("FMP_RATE_LIMIT_PER_MINUTE", 5))  # Conservative for free tier
+    FMP_RATE_LIMIT_PER_DAY: int = int(os.getenv("FMP_RATE_LIMIT_PER_DAY", 250))  # Daily limit for free tier
+    FMP_RETRY_DELAY: int = int(os.getenv("FMP_RETRY_DELAY", 60))  # Seconds to wait after rate limit hit
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

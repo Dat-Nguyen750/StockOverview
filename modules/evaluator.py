@@ -272,4 +272,11 @@ class StockEvaluator:
             return result
             
         except Exception as e:
-            raise
+            error_msg = str(e)
+            if "rate limit" in error_msg.lower() or "429" in error_msg:
+                rate_limit_status = self.data_fetcher.get_rate_limit_status()
+                raise Exception(f"API rate limit exceeded. Daily requests used: {rate_limit_status['daily_requests_used']}/{rate_limit_status['daily_limit']}. Please try again later or upgrade your API plan.")
+            elif "daily rate limit exceeded" in error_msg.lower():
+                raise Exception(f"Daily API limit reached. Please try again tomorrow or upgrade your API plan.")
+            else:
+                raise Exception(f"Error fetching data for {ticker}: {error_msg}")

@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 import json
 from ratelimit import limits, sleep_and_retry
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DataFetcher:
     def __init__(self):
@@ -13,24 +16,87 @@ class DataFetcher:
         self.serp_api_key = os.getenv("SERP_API_KEY")
         self.fmp_base_url = "https://financialmodelingprep.com/api/v3"
         self.serp_base_url = "https://serpapi.com/search"
-        self.rate_limit = int(os.getenv("FMP_RATE_LIMIT_PER_MINUTE", 15))
+        self.rate_limit_per_minute = int(os.getenv("FMP_RATE_LIMIT_PER_MINUTE", 5))
+        self.rate_limit_per_day = int(os.getenv("FMP_RATE_LIMIT_PER_DAY", 250))
+        self.retry_delay = int(os.getenv("FMP_RETRY_DELAY", 60))
         self.last_fmp_call = 0
+        self.daily_request_count = 0
+        self.last_reset_date = datetime.now().date()
         
-    async def _rate_limited_request(self, url: str, params: Dict = None) -> Dict:
-        """Make rate-limited HTTP request"""
+    def _reset_daily_counter_if_needed(self):
+        """Reset daily counter if it's a new day"""
+        current_date = datetime.now().date()
+        if current_date != self.last_reset_date:
+            self.daily_request_count = 0
+            self.last_reset_date = current_date
+    
+    async def _rate_limited_request(self, url: str, params: Dict = None, max_retries: int = 3) -> Dict:
+        """Make rate-limited HTTP request with retry logic"""
+        self._reset_daily_counter_if_needed()
+        
+        # Check daily limit
+        if self.daily_request_count >= self.rate_limit_per_day:
+            raise Exception(f"Daily rate limit exceeded ({self.rate_limit_per_day} requests/day)")
+        
         # Simple rate limiting - wait if needed
         current_time = time.time()
         time_since_last = current_time - self.last_fmp_call
-        min_interval = 60 / self.rate_limit  # seconds between calls
+        min_interval = 60 / self.rate_limit_per_minute  # seconds between calls
         
         if time_since_last < min_interval:
-            await asyncio.sleep(min_interval - time_since_last)
+            wait_time = min_interval - time_since_last
+            logger.info(f"Rate limiting: waiting {wait_time:.2f} seconds")
+            await asyncio.sleep(wait_time)
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
-            self.last_fmp_call = time.time()
-            return response.json()
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(url, params=params)
+                    
+                    if response.status_code == 429:
+                        # Rate limit hit
+                        logger.warning(f"Rate limit hit (429) on attempt {attempt + 1}/{max_retries}")
+                        if attempt < max_retries - 1:
+                            wait_time = self.retry_delay * (attempt + 1)  # Exponential backoff
+                            logger.info(f"Waiting {wait_time} seconds before retry")
+                            await asyncio.sleep(wait_time)
+                            continue
+                        else:
+                            raise Exception("Rate limit exceeded after all retries")
+                    
+                    response.raise_for_status()
+                    self.last_fmp_call = time.time()
+                    self.daily_request_count += 1
+                    return response.json()
+                    
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429 and attempt < max_retries - 1:
+                    wait_time = self.retry_delay * (attempt + 1)
+                    logger.warning(f"HTTP 429 error, waiting {wait_time} seconds before retry")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    raise
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)  # Short delay for other errors
+                    logger.warning(f"Request error: {e}, waiting {wait_time} seconds before retry")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    raise
+
+    def get_rate_limit_status(self) -> Dict[str, Any]:
+        """Get current rate limit status"""
+        self._reset_daily_counter_if_needed()
+        return {
+            "daily_requests_used": self.daily_request_count,
+            "daily_requests_remaining": self.rate_limit_per_day - self.daily_request_count,
+            "daily_limit": self.rate_limit_per_day,
+            "minute_limit": self.rate_limit_per_minute,
+            "last_request_time": self.last_fmp_call,
+            "time_since_last_request": time.time() - self.last_fmp_call if self.last_fmp_call > 0 else None
+        }
 
     async def get_company_profile(self, ticker: str) -> Dict[str, Any]:
         """Get basic company information"""

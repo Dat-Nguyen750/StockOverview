@@ -165,6 +165,29 @@ async def health_check():
         # Check if evaluator is available
         if hasattr(app.state, 'evaluator'):
             health_status["evaluator"] = "available"
+            
+            # Add rate limit status if available
+            try:
+                rate_limit_status = app.state.evaluator.data_fetcher.get_rate_limit_status()
+                health_status["rate_limits"] = {
+                    "daily_requests_used": rate_limit_status["daily_requests_used"],
+                    "daily_requests_remaining": rate_limit_status["daily_requests_remaining"],
+                    "daily_limit": rate_limit_status["daily_limit"],
+                    "minute_limit": rate_limit_status["minute_limit"]
+                }
+                
+                # Check if we're approaching limits
+                daily_usage_percent = (rate_limit_status["daily_requests_used"] / rate_limit_status["daily_limit"]) * 100
+                if daily_usage_percent > 80:
+                    health_status["status"] = "degraded"
+                    health_status["warnings"] = ["Approaching daily API limit"]
+                elif daily_usage_percent > 95:
+                    health_status["status"] = "unhealthy"
+                    health_status["warnings"] = ["Daily API limit nearly reached"]
+                    
+            except Exception as e:
+                logger.warning(f"Could not get rate limit status: {e}")
+                health_status["rate_limits"] = "unavailable"
         else:
             health_status["evaluator"] = "unavailable"
             health_status["status"] = "degraded"
@@ -252,6 +275,23 @@ async def metrics():
         "environment": settings.ENVIRONMENT,
         "version": "1.0.0"
     }
+
+@app.get("/rate-limits")
+async def rate_limits():
+    """Get current rate limit status"""
+    try:
+        if not hasattr(app.state, 'evaluator'):
+            raise HTTPException(status_code=503, detail="Evaluator not available")
+        
+        rate_limit_status = app.state.evaluator.data_fetcher.get_rate_limit_status()
+        return {
+            "rate_limits": rate_limit_status,
+            "timestamp": time.time(),
+            "environment": settings.ENVIRONMENT
+        }
+    except Exception as e:
+        logger.error(f"Error getting rate limit status: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting rate limit status: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
