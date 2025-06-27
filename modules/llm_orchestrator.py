@@ -15,12 +15,39 @@ class LLMOrchestrator:
     def _get_model(self, api_key: str = None):
         """Get a model instance for the specified API key"""
         if api_key:
+            # Basic validation - Gemini keys typically start with "AI"
+            if not self._is_valid_gemini_key_format(api_key):
+                print(f"Warning: API key format doesn't look like a valid Gemini key")
+                # Still try to use it, but warn the user
+            
             # Create a new configuration for this specific API key
             genai.configure(api_key=api_key)
             return genai.GenerativeModel('gemini-1.5-flash')
         else:
             # Use default model
             return self.default_model
+    
+    def _is_valid_gemini_key_format(self, api_key: str) -> bool:
+        """Basic validation to check if API key format looks like Gemini"""
+        if not api_key:
+            return False
+        
+        # Gemini API keys typically:
+        # - Start with "AI" 
+        # - Are around 40-50 characters long
+        # - Contain alphanumeric characters
+        if len(api_key) < 30 or len(api_key) > 60:
+            return False
+        
+        if not api_key.startswith("AI"):
+            return False
+        
+        # Check if it contains only valid characters
+        import re
+        if not re.match(r'^[A-Za-z0-9_-]+$', api_key):
+            return False
+        
+        return True
     
     async def analyze_business_fundamentals(self, company_profile: Dict, news_data: List[Dict], api_key: str = None) -> Dict[str, Any]:
         """Analyze business fundamentals using Gemini"""
@@ -113,13 +140,13 @@ class LLMOrchestrator:
                     "management_quality_score": 15,
                     "total_score": 60,
                     "analysis": {
-                        "revenue_model": "Analysis unavailable",
-                        "competitive_moat": "Analysis unavailable",
-                        "industry_position": "Analysis unavailable",
-                        "management_quality": "Analysis unavailable"
+                        "revenue_model": "Analysis unavailable - Invalid response format",
+                        "competitive_moat": "Analysis unavailable - Invalid response format",
+                        "industry_position": "Analysis unavailable - Invalid response format",
+                        "management_quality": "Analysis unavailable - Invalid response format"
                     },
-                    "key_strengths": ["Analysis unavailable"],
-                    "key_concerns": ["Analysis unavailable"]
+                    "key_strengths": ["Analysis unavailable - Invalid response format"],
+                    "key_concerns": ["Analysis unavailable - Invalid response format"]
                 }
             
             # Ensure all string values are safe for formatting
@@ -137,9 +164,30 @@ class LLMOrchestrator:
             
             return result
         except Exception as e:
-            # Check for quota exceeded error
-            error_str = str(e)
-            if "429" in error_str or "quota" in error_str.lower() or "exceeded" in error_str.lower():
+            # Check for specific error types
+            error_str = str(e).lower()
+            
+            # Authentication/API key errors
+            if any(keyword in error_str for keyword in ["401", "unauthorized", "invalid api key", "authentication", "permission"]):
+                print(f"Gemini API authentication error: {e}")
+                return {
+                    "revenue_model_score": 15,
+                    "competitive_moat_score": 15,
+                    "industry_position_score": 15,
+                    "management_quality_score": 15,
+                    "total_score": 60,
+                    "analysis": {
+                        "revenue_model": "Analysis unavailable - Invalid API key",
+                        "competitive_moat": "Analysis unavailable - Invalid API key",
+                        "industry_position": "Analysis unavailable - Invalid API key",
+                        "management_quality": "Analysis unavailable - Invalid API key"
+                    },
+                    "key_strengths": ["Analysis unavailable - Invalid API key"],
+                    "key_concerns": ["Analysis unavailable - Invalid API key"]
+                }
+            
+            # Rate limit/quota errors
+            elif "429" in error_str or "quota" in error_str or "exceeded" in error_str:
                 print(f"Gemini API quota exceeded: {e}")
                 return {
                     "revenue_model_score": 15,
@@ -158,22 +206,24 @@ class LLMOrchestrator:
                 }
             
             # General fallback for other errors
-            fallback = {
-                "revenue_model_score": 15,
-                "competitive_moat_score": 15,
-                "industry_position_score": 15,
-                "management_quality_score": 15,
-                "total_score": 60,
-                "analysis": {
-                    "revenue_model": "Analysis unavailable",
-                    "competitive_moat": "Analysis unavailable",
-                    "industry_position": "Analysis unavailable",
-                    "management_quality": "Analysis unavailable"
-                },
-                "key_strengths": ["Analysis unavailable"],
-                "key_concerns": ["Analysis unavailable"]
-            }
-            return fallback
+            else:
+                print(f"Gemini API error: {e}")
+                fallback = {
+                    "revenue_model_score": 15,
+                    "competitive_moat_score": 15,
+                    "industry_position_score": 15,
+                    "management_quality_score": 15,
+                    "total_score": 60,
+                    "analysis": {
+                        "revenue_model": "Analysis unavailable - API error",
+                        "competitive_moat": "Analysis unavailable - API error",
+                        "industry_position": "Analysis unavailable - API error",
+                        "management_quality": "Analysis unavailable - API error"
+                    },
+                    "key_strengths": ["Analysis unavailable - API error"],
+                    "key_concerns": ["Analysis unavailable - API error"]
+                }
+                return fallback
     
     async def analyze_tam_and_growth(self, company_profile: Dict, news_data: List[Dict], api_key: str = None) -> Dict[str, Any]:
         """Analyze Total Addressable Market and growth initiatives"""

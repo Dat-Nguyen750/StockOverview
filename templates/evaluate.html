@@ -288,6 +288,29 @@
         transform: none;
     }
 
+    .submit-btn.analyzing {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        opacity: 0.8;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .submit-btn.analyzing:hover {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        transform: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .submit-btn.analyzing i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
     .info-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -418,6 +441,76 @@
         .info-cards {
             grid-template-columns: 1fr;
         }
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+    }
+
+    .loading-content {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 3rem;
+        text-align: center;
+        box-shadow: var(--shadow-xl);
+        max-width: 400px;
+        width: 90%;
+        border: 1px solid #e2e8f0;
+    }
+
+    .loading-spinner {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .loading-title {
+        font-weight: 800;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+
+    .loading-text {
+        color: var(--secondary-color);
+        margin-bottom: 2rem;
+        font-weight: 500;
+        line-height: 1.6;
+    }
+
+    .loading-progress {
+        margin-top: 1.5rem;
+    }
+
+    .progress-bar {
+        background: #e2e8f0;
+        border-radius: 10px;
+        height: 8px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress-fill {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        height: 100%;
+        border-radius: 10px;
+        animation: progress 30s linear infinite;
+        width: 0%;
+    }
+
+    @keyframes progress {
+        0% { width: 0%; }
+        100% { width: 100%; }
     }
 </style>
 {% endblock %}
@@ -569,6 +662,22 @@
                         Analyze Stock
                     </button>
                 </div>
+                
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                    <div class="loading-content">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                        <h3 class="loading-title">Analyzing Stock...</h3>
+                        <p class="loading-text">This may take up to 30 seconds. Please don't close this page.</p>
+                        <div class="loading-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
 
@@ -703,17 +812,22 @@ document.getElementById('analysisForm').addEventListener('submit', function(e) {
     if (serpKey) sessionStorage.setItem(CACHE_KEYS.SERP_KEY, serpKey);
     if (geminiKey) sessionStorage.setItem(CACHE_KEYS.GEMINI_KEY, geminiKey);
     
-    // Show loading state
+    // Show loading state and disable button
     const submitBtn = document.getElementById('submitBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Analyzing...';
     submitBtn.disabled = true;
+    submitBtn.style.cursor = 'not-allowed';
+    submitBtn.classList.add('analyzing');
     
-    // Re-enable button after a delay (in case of errors)
-    setTimeout(() => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }, 30000);
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    
+    // The button will remain disabled until the page redirects to results
+    // If there's an error, the page will reload and the button will be reset
+    // If successful, the user will be redirected to the results page
 });
 
 // Auto-format ticker input
