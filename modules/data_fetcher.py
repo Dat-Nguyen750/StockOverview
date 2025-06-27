@@ -199,16 +199,17 @@ class DataFetcher:
         # For now, return a default industry PE
         return 20.0  # Default industry PE
 
-    async def search_company_news(self, company_name: str, ticker: str) -> List[Dict]:
+    async def search_company_news(self, company_name: str, ticker: str, serp_api_key: str = None) -> List[Dict]:
         """Search for recent company news using SERP API"""
-        if not self.serp_api_key:
+        api_key = serp_api_key or self.serp_api_key
+        if not api_key:
             return []
         
         query = f"{company_name} {ticker} stock news"
         params = {
             "engine": "google",
             "q": query,
-            "api_key": self.serp_api_key,
+            "api_key": api_key,
             "num": 10,
             "tbm": "nws"  # News search
         }
@@ -223,9 +224,10 @@ class DataFetcher:
             print(f"Error fetching news: {e}")
             return []
 
-    async def search_company_info(self, company_name: str, query_type: str) -> List[Dict]:
+    async def search_company_info(self, company_name: str, query_type: str, serp_api_key: str = None) -> List[Dict]:
         """Search for specific company information"""
-        if not self.serp_api_key:
+        api_key = serp_api_key or self.serp_api_key
+        if not api_key:
             return []
         
         query_map = {
@@ -239,7 +241,7 @@ class DataFetcher:
         params = {
             "engine": "google",
             "q": query,
-            "api_key": self.serp_api_key,
+            "api_key": api_key,
             "num": 5
         }
         

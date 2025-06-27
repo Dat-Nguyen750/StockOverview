@@ -5,11 +5,43 @@ from typing import Dict, Any, List
 
 class LLMOrchestrator:
     def __init__(self):
-        genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        # Initialize with environment variable as fallback
+        self.default_api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
+        self.default_model = None
+        if self.default_api_key:
+            genai.configure(api_key=self.default_api_key)
+            self.default_model = genai.GenerativeModel('gemini-1.5-flash')
     
-    async def analyze_business_fundamentals(self, company_profile: Dict, news_data: List[Dict]) -> Dict[str, Any]:
+    def _get_model(self, api_key: str = None):
+        """Get a model instance for the specified API key"""
+        if api_key:
+            # Create a new configuration for this specific API key
+            genai.configure(api_key=api_key)
+            return genai.GenerativeModel('gemini-1.5-flash')
+        else:
+            # Use default model
+            return self.default_model
+    
+    async def analyze_business_fundamentals(self, company_profile: Dict, news_data: List[Dict], api_key: str = None) -> Dict[str, Any]:
         """Analyze business fundamentals using Gemini"""
+        
+        model = self._get_model(api_key)
+        if not model:
+            return {
+                "revenue_model_score": 15,
+                "competitive_moat_score": 15,
+                "industry_position_score": 15,
+                "management_quality_score": 15,
+                "total_score": 60,
+                "analysis": {
+                    "revenue_model": "Analysis unavailable - No API key provided",
+                    "competitive_moat": "Analysis unavailable - No API key provided",
+                    "industry_position": "Analysis unavailable - No API key provided",
+                    "management_quality": "Analysis unavailable - No API key provided"
+                },
+                "key_strengths": ["Analysis unavailable - No API key provided"],
+                "key_concerns": ["Analysis unavailable - No API key provided"]
+            }
         
         prompt = """
         Analyze the business fundamentals of {company_name} based on the following information:
@@ -58,7 +90,7 @@ class LLMOrchestrator:
         )
         
         try:
-            response = self.model.generate_content(prompt)
+            response = model.generate_content(prompt)
             # Parse JSON from response
             json_str = response.text.strip()
             if json_str.startswith('```json'):
@@ -143,8 +175,20 @@ class LLMOrchestrator:
             }
             return fallback
     
-    async def analyze_tam_and_growth(self, company_profile: Dict, news_data: List[Dict]) -> Dict[str, Any]:
+    async def analyze_tam_and_growth(self, company_profile: Dict, news_data: List[Dict], api_key: str = None) -> Dict[str, Any]:
         """Analyze Total Addressable Market and growth initiatives"""
+        
+        model = self._get_model(api_key)
+        if not model:
+            return {
+                "tam_score": 25,
+                "growth_initiatives_score": 25,
+                "total_score": 50,
+                "analysis": {
+                    "tam_assessment": "Analysis unavailable - No API key provided",
+                    "growth_initiatives": "Analysis unavailable - No API key provided"
+                }
+            }
         
         prompt = """
         Analyze the Total Addressable Market (TAM) and growth potential for {company_name}:
@@ -180,7 +224,7 @@ class LLMOrchestrator:
         )
         
         try:
-            response = self.model.generate_content(prompt)
+            response = model.generate_content(prompt)
             json_str = response.text.strip()
             if json_str.startswith('```json'):
                 json_str = json_str[7:-3]
@@ -246,8 +290,21 @@ class LLMOrchestrator:
             }
             return fallback
     
-    async def analyze_sentiment_and_risks(self, company_profile: Dict, news_data: List[Dict], insider_trading: List[Dict]) -> Dict[str, Any]:
+    async def analyze_sentiment_and_risks(self, company_profile: Dict, news_data: List[Dict], insider_trading: List[Dict], api_key: str = None) -> Dict[str, Any]:
         """Analyze sentiment and identify red flags"""
+        
+        model = self._get_model(api_key)
+        if not model:
+            return {
+                "news_sentiment_score": 25,
+                "red_flags_score": 40,
+                "total_score": 65,
+                "analysis": {
+                    "sentiment_summary": "Analysis unavailable - No API key provided",
+                    "identified_red_flags": ["Analysis unavailable - No API key provided"],
+                    "positive_indicators": ["Analysis unavailable - No API key provided"]
+                }
+            }
         
         news_titles = [item.get('title', '') for item in news_data[:10]]
         insider_summary = "Recent insider transactions: {} transactions".format(len(insider_trading))
@@ -288,7 +345,7 @@ class LLMOrchestrator:
         )
         
         try:
-            response = self.model.generate_content(prompt)
+            response = model.generate_content(prompt)
             json_str = response.text.strip()
             if json_str.startswith('```json'):
                 json_str = json_str[7:-3]
@@ -357,8 +414,19 @@ class LLMOrchestrator:
             }
             return fallback
     
-    async def generate_dcf_valuation(self, statements: Dict, company_profile: Dict) -> Dict[str, Any]:
+    async def generate_dcf_valuation(self, statements: Dict, company_profile: Dict, api_key: str = None) -> Dict[str, Any]:
         """Generate DCF valuation analysis"""
+        
+        model = self._get_model(api_key)
+        if not model:
+            return {
+                "estimated_fair_value": company_profile.get('mktCap', 0),
+                "current_market_cap": company_profile.get('mktCap', 0),
+                "upside_percentage": 0,
+                "confidence_level": "low",
+                "key_assumptions": ["Analysis unavailable - No API key provided"],
+                "analysis": "Analysis unavailable - No API key provided"
+            }
         
         latest_income = statements.get("income", [{}])[0] if statements.get("income") else {}
         latest_cashflow = statements.get("cashflow", [{}])[0] if statements.get("cashflow") else {}
@@ -378,18 +446,18 @@ class LLMOrchestrator:
         3. Upside/downside vs current market cap
         
         Return JSON format:
-        {
+        {{
             "estimated_fair_value": <estimated_value>,
             "current_market_cap": <current_market_cap>,
             "upside_percentage": <upside_percent>,
             "confidence_level": "<high/medium/low>",
             "key_assumptions": ["<assumption1>", "<assumption2>"],
             "analysis": "<brief DCF analysis>"
-        }
+        }}
         """
         
         try:
-            response = self.model.generate_content(prompt)
+            response = model.generate_content(prompt)
             json_str = response.text.strip()
             if json_str.startswith('```json'):
                 json_str = json_str[7:-3]

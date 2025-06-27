@@ -218,10 +218,17 @@ async def evaluate_stock(ticker: str, request_headers: Request) -> EvaluationRes
         
         logger.info(f"Evaluating stock: {ticker}")
         
-        # Extract FMP API key from headers if provided
+        # Extract API keys from headers if provided
         fmp_api_key = request_headers.headers.get('X-FMP-API-Key')
+        gemini_api_key = request_headers.headers.get('X-GEMINI-API-Key')
+        serp_api_key = request_headers.headers.get('X-SERP-API-Key')
         
-        result = await app.state.evaluator.evaluate_company(ticker, fmp_api_key=fmp_api_key)
+        result = await app.state.evaluator.evaluate_company(
+            ticker, 
+            fmp_api_key=fmp_api_key,
+            gemini_api_key=gemini_api_key,
+            serp_api_key=serp_api_key
+        )
         
         # Sanitize the result to ensure JSON serialization
         sanitized_result = sanitize_for_json(result)
@@ -249,14 +256,18 @@ async def evaluate_stock_post(request: EvaluationRequest, request_headers: Reque
     try:
         logger.info(f"Evaluating stock via POST: {request.ticker}")
         
-        # Extract FMP API key from headers if provided
+        # Extract API keys from headers if provided
         fmp_api_key = request_headers.headers.get('X-FMP-API-Key')
+        gemini_api_key = request_headers.headers.get('X-GEMINI-API-Key')
+        serp_api_key = request_headers.headers.get('X-SERP-API-Key')
         
         result = await app.state.evaluator.evaluate_company(
             request.ticker,
             include_detailed_analysis=request.include_detailed_analysis,
             custom_weights=request.custom_weights,
-            fmp_api_key=fmp_api_key
+            fmp_api_key=fmp_api_key,
+            gemini_api_key=gemini_api_key,
+            serp_api_key=serp_api_key
         )
         
         # Sanitize the result to ensure JSON serialization

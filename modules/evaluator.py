@@ -56,7 +56,9 @@ class StockEvaluator:
         ticker: str, 
         include_detailed_analysis: bool = False,
         custom_weights: Optional[Dict[str, float]] = None,
-        fmp_api_key: Optional[str] = None
+        fmp_api_key: Optional[str] = None,
+        gemini_api_key: Optional[str] = None,
+        serp_api_key: Optional[str] = None
     ) -> Dict[str, Any]:
         """Main evaluation function that orchestrates the entire analysis"""
         
@@ -84,7 +86,7 @@ class StockEvaluator:
             
             # News and additional data
             company_name = company_profile.get('companyName', ticker)
-            news_data = await self.data_fetcher.search_company_news(company_name, ticker)
+            news_data = await self.data_fetcher.search_company_news(company_name, ticker, serp_api_key=serp_api_key)
             
             # Step 2: Calculate rule-based scores
             
@@ -105,9 +107,9 @@ class StockEvaluator:
             # Step 3: LLM Analysis
             
             llm_tasks = [
-                self.llm_orchestrator.analyze_business_fundamentals(company_profile, news_data),
-                self.llm_orchestrator.analyze_tam_and_growth(company_profile, news_data),
-                self.llm_orchestrator.analyze_sentiment_and_risks(company_profile, news_data, insider_trading)
+                self.llm_orchestrator.analyze_business_fundamentals(company_profile, news_data, api_key=gemini_api_key),
+                self.llm_orchestrator.analyze_tam_and_growth(company_profile, news_data, api_key=gemini_api_key),
+                self.llm_orchestrator.analyze_sentiment_and_risks(company_profile, news_data, insider_trading, api_key=gemini_api_key)
             ]
             
             business_analysis, tam_analysis, sentiment_analysis = await asyncio.gather(*llm_tasks)
