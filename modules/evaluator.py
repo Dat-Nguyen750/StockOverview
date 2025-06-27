@@ -55,7 +55,8 @@ class StockEvaluator:
         self, 
         ticker: str, 
         include_detailed_analysis: bool = False,
-        custom_weights: Optional[Dict[str, float]] = None
+        custom_weights: Optional[Dict[str, float]] = None,
+        fmp_api_key: Optional[str] = None
     ) -> Dict[str, Any]:
         """Main evaluation function that orchestrates the entire analysis"""
         
@@ -67,16 +68,16 @@ class StockEvaluator:
             # Step 1: Gather all data concurrently
             
             # Basic company data
-            company_profile = await self.data_fetcher.get_company_profile(ticker)
+            company_profile = await self.data_fetcher.get_company_profile(ticker, api_key=fmp_api_key)
             if not company_profile:
                 raise ValueError(f"Company profile not found for ticker {ticker}")
             
             # Financial data
             financial_data_tasks = [
-                self.data_fetcher.get_financial_statements(ticker),
-                self.data_fetcher.get_key_metrics(ticker),
-                self.data_fetcher.get_financial_ratios(ticker),
-                self.data_fetcher.get_insider_trading(ticker)
+                self.data_fetcher.get_financial_statements(ticker, api_key=fmp_api_key),
+                self.data_fetcher.get_key_metrics(ticker, api_key=fmp_api_key),
+                self.data_fetcher.get_financial_ratios(ticker, api_key=fmp_api_key),
+                self.data_fetcher.get_insider_trading(ticker, api_key=fmp_api_key)
             ]
             
             statements, metrics, ratios, insider_trading = await asyncio.gather(*financial_data_tasks)
@@ -274,9 +275,9 @@ class StockEvaluator:
         except Exception as e:
             error_msg = str(e)
             if "rate limit" in error_msg.lower() or "429" in error_msg:
-                rate_limit_status = self.data_fetcher.get_rate_limit_status()
-                raise Exception(f"API rate limit exceeded. Daily requests used: {rate_limit_status['daily_requests_used']}/{rate_limit_status['daily_limit']}. Please try again later or upgrade your API plan.")
+                rate_limit_status = self.data_fetcher.get_rate_limit_status(api_key=fmp_api_key)
+                raise Exception(f"API rate limit exceeded for your API key. Daily requests used: {rate_limit_status['daily_requests_used']}/{rate_limit_status['daily_limit']}. Please try again later or upgrade your API plan.")
             elif "daily rate limit exceeded" in error_msg.lower():
-                raise Exception(f"Daily API limit reached. Please try again tomorrow or upgrade your API plan.")
+                raise Exception(f"Daily API limit reached for your API key. Please try again tomorrow or upgrade your API plan.")
             else:
                 raise Exception(f"Error fetching data for {ticker}: {error_msg}")

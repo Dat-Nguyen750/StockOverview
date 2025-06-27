@@ -201,7 +201,7 @@ async def health_check():
         )
 
 @app.get("/evaluate")
-async def evaluate_stock(ticker: str) -> EvaluationResponse:
+async def evaluate_stock(ticker: str, request_headers: Request) -> EvaluationResponse:
     """
     Evaluate a stock for long-term investment potential
     
@@ -218,7 +218,10 @@ async def evaluate_stock(ticker: str) -> EvaluationResponse:
         
         logger.info(f"Evaluating stock: {ticker}")
         
-        result = await app.state.evaluator.evaluate_company(ticker)
+        # Extract FMP API key from headers if provided
+        fmp_api_key = request_headers.headers.get('X-FMP-API-Key')
+        
+        result = await app.state.evaluator.evaluate_company(ticker, fmp_api_key=fmp_api_key)
         
         # Sanitize the result to ensure JSON serialization
         sanitized_result = sanitize_for_json(result)
@@ -239,17 +242,21 @@ async def evaluate_stock(ticker: str) -> EvaluationResponse:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @app.post("/evaluate")
-async def evaluate_stock_post(request: EvaluationRequest) -> EvaluationResponse:
+async def evaluate_stock_post(request: EvaluationRequest, request_headers: Request) -> EvaluationResponse:
     """
     POST endpoint for stock evaluation with additional parameters
     """
     try:
         logger.info(f"Evaluating stock via POST: {request.ticker}")
         
+        # Extract FMP API key from headers if provided
+        fmp_api_key = request_headers.headers.get('X-FMP-API-Key')
+        
         result = await app.state.evaluator.evaluate_company(
             request.ticker,
             include_detailed_analysis=request.include_detailed_analysis,
-            custom_weights=request.custom_weights
+            custom_weights=request.custom_weights,
+            fmp_api_key=fmp_api_key
         )
         
         # Sanitize the result to ensure JSON serialization
@@ -277,13 +284,16 @@ async def metrics():
     }
 
 @app.get("/rate-limits")
-async def rate_limits():
+async def rate_limits(request_headers: Request):
     """Get current rate limit status"""
     try:
         if not hasattr(app.state, 'evaluator'):
             raise HTTPException(status_code=503, detail="Evaluator not available")
         
-        rate_limit_status = app.state.evaluator.data_fetcher.get_rate_limit_status()
+        # Extract FMP API key from headers if provided
+        fmp_api_key = request_headers.headers.get('X-FMP-API-Key')
+        
+        rate_limit_status = app.state.evaluator.data_fetcher.get_rate_limit_status(api_key=fmp_api_key)
         return {
             "rate_limits": rate_limit_status,
             "timestamp": time.time(),
