@@ -69,6 +69,9 @@ class DataFetcher:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     response = await client.get(url, params=params)
                     
+                    # Log the response status for debugging
+                    logger.info(f"API Response: {response.status_code} for {url.split('/')[-1]}")
+                    
                     if response.status_code == 429:
                         # Rate limit hit
                         logger.warning(f"Rate limit hit (429) for API key {api_key_hash[:8]}... on attempt {attempt + 1}/{max_retries}")
@@ -80,19 +83,74 @@ class DataFetcher:
                         else:
                             raise Exception("Rate limit exceeded after all retries")
                     
+                    # Handle specific error codes
+                    if response.status_code == 502:
+                        logger.error(f"Bad Gateway (502) error from Financial Modeling Prep API on attempt {attempt + 1}/{max_retries}")
+                        if attempt < max_retries - 1:
+                            wait_time = 10 * (attempt + 1)  # Longer delay for 502 errors
+                            logger.info(f"Waiting {wait_time} seconds before retry for 502 error")
+                            await asyncio.sleep(wait_time)
+                            continue
+                        else:
+                            raise Exception("Financial Modeling Prep API is experiencing issues (502 Bad Gateway). Please try again later.")
+                    
+                    if response.status_code == 503:
+                        logger.error(f"Service Unavailable (503) error from Financial Modeling Prep API on attempt {attempt + 1}/{max_retries}")
+                        if attempt < max_retries - 1:
+                            wait_time = 15 * (attempt + 1)  # Even longer delay for 503 errors
+                            logger.info(f"Waiting {wait_time} seconds before retry for 503 error")
+                            await asyncio.sleep(wait_time)
+                            continue
+                        else:
+                            raise Exception("Financial Modeling Prep API is temporarily unavailable (503 Service Unavailable). Please try again later.")
+                    
                     response.raise_for_status()
                     self.api_key_timers[api_key_hash] = time.time()
                     self.api_key_daily_counts[api_key_hash] = daily_count + 1
                     return response.json()
                     
             except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP {e.response.status_code} error for {url}: {e}")
                 if e.response.status_code == 429 and attempt < max_retries - 1:
                     wait_time = self.retry_delay * (attempt + 1)
                     logger.warning(f"HTTP 429 error for API key {api_key_hash[:8]}..., waiting {wait_time} seconds before retry")
                     await asyncio.sleep(wait_time)
                     continue
+                elif e.response.status_code in [502, 503] and attempt < max_retries - 1:
+                    wait_time = 10 * (attempt + 1)
+                    logger.warning(f"HTTP {e.response.status_code} error, waiting {wait_time} seconds before retry")
+                    await asyncio.sleep(wait_time)
+                    continue
                 else:
-                    raise
+                    # Re-raise with more descriptive error message
+                    if e.response.status_code == 401:
+                        raise Exception("Invalid API key for Financial Modeling Prep. Please check your API key.")
+                    elif e.response.status_code == 403:
+                        raise Exception("API key does not have permission to access this endpoint.")
+                    elif e.response.status_code == 404:
+                        raise Exception("Data not found for this ticker symbol.")
+                    elif e.response.status_code == 500:
+                        raise Exception("Financial Modeling Prep API internal error. Please try again later.")
+                    else:
+                        raise Exception(f"Financial Modeling Prep API error ({e.response.status_code}): {e}")
+            except httpx.ConnectError as e:
+                logger.error(f"Connection error for {url}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.warning(f"Connection error, waiting {wait_time} seconds before retry")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    raise Exception(f"Unable to connect to Financial Modeling Prep API: {e}")
+            except httpx.TimeoutException as e:
+                logger.error(f"Timeout error for {url}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.warning(f"Timeout error, waiting {wait_time} seconds before retry")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    raise Exception(f"Request to Financial Modeling Prep API timed out: {e}")
             except Exception as e:
                 if attempt < max_retries - 1:
                     wait_time = 5 * (attempt + 1)  # Short delay for other errors

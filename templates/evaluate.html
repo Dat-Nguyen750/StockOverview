@@ -455,6 +455,16 @@
         justify-content: center;
         z-index: 9999;
         backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        pointer-events: none;
+    }
+
+    .loading-overlay.show {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
     }
 
     .loading-content {
@@ -466,12 +476,21 @@
         max-width: 400px;
         width: 90%;
         border: 1px solid #e2e8f0;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+        position: relative;
+    }
+
+    .loading-overlay.show .loading-content {
+        transform: scale(1);
     }
 
     .loading-spinner {
         font-size: 3rem;
         color: var(--primary-color);
         margin-bottom: 1.5rem;
+        animation: spin 2s linear infinite;
+        display: inline-block;
     }
 
     .loading-title {
@@ -511,6 +530,16 @@
     @keyframes progress {
         0% { width: 0%; }
         100% { width: 100%; }
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Prevent body scroll when loading overlay is shown */
+    body.loading {
+        overflow: hidden;
     }
 </style>
 {% endblock %}
@@ -664,10 +693,10 @@
                 </div>
                 
                 <!-- Loading Overlay -->
-                <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                <div class="loading-overlay" id="loadingOverlay">
                     <div class="loading-content">
                         <div class="loading-spinner">
-                            <i class="fas fa-spinner fa-spin"></i>
+                            <i class="fas fa-spinner"></i>
                         </div>
                         <h3 class="loading-title">Analyzing Stock...</h3>
                         <p class="loading-text">This may take up to 30 seconds. Please don't close this page.</p>
@@ -801,6 +830,32 @@ function togglePasswordVisibility(fieldId) {
     }
 }
 
+// Show loading overlay
+function showLoadingOverlay() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const body = document.body;
+    loadingOverlay.classList.add('show');
+    body.classList.add('loading');
+}
+
+// Hide loading overlay
+function hideLoadingOverlay() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const body = document.body;
+    loadingOverlay.classList.remove('show');
+    body.classList.remove('loading');
+}
+
+// Reset form state
+function resetFormState() {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-search"></i>Analyze Stock';
+    submitBtn.disabled = false;
+    submitBtn.style.cursor = '';
+    submitBtn.classList.remove('analyzing');
+    hideLoadingOverlay();
+}
+
 // Form submission handling
 document.getElementById('analysisForm').addEventListener('submit', function(e) {
     // Cache API keys before submission
@@ -814,7 +869,6 @@ document.getElementById('analysisForm').addEventListener('submit', function(e) {
     
     // Show loading state and disable button
     const submitBtn = document.getElementById('submitBtn');
-    const loadingOverlay = document.getElementById('loadingOverlay');
     
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Analyzing...';
@@ -822,12 +876,25 @@ document.getElementById('analysisForm').addEventListener('submit', function(e) {
     submitBtn.style.cursor = 'not-allowed';
     submitBtn.classList.add('analyzing');
     
-    // Show loading overlay
-    loadingOverlay.style.display = 'flex';
+    // Show loading overlay with smooth transition
+    showLoadingOverlay();
     
     // The button will remain disabled until the page redirects to results
     // If there's an error, the page will reload and the button will be reset
     // If successful, the user will be redirected to the results page
+});
+
+// Handle page visibility changes to reset form if user navigates away and back
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        // Page became visible again, reset form state
+        resetFormState();
+    }
+});
+
+// Handle page unload to clean up
+window.addEventListener('beforeunload', function() {
+    hideLoadingOverlay();
 });
 
 // Auto-format ticker input

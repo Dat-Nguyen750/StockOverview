@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Overlay Test</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 1rem;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .loading-content {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 3rem;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid #e2e8f0;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .loading-overlay.show .loading-content {
+            transform: scale(1);
+        }
+
+        .loading-spinner {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            animation: spin 2s linear infinite;
+            display: inline-block;
+        }
+
+        .loading-title {
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .loading-text {
+            color: #64748b;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .loading-progress {
+            margin-top: 1.5rem;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            height: 100%;
+            border-radius: 10px;
+            animation: progress 30s linear infinite;
+            width: 0%;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        body.loading {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Loading Overlay Test</h1>
+        <p>This page tests the loading overlay to ensure it doesn't flash between states.</p>
+        
+        <button class="test-button" onclick="showLoading()">
+            <i class="fas fa-play"></i>
+            Show Loading Overlay
+        </button>
+        
+        <button class="test-button" onclick="hideLoading()">
+            <i class="fas fa-stop"></i>
+            Hide Loading Overlay
+        </button>
+        
+        <button class="test-button" onclick="testQuickToggle()">
+            <i class="fas fa-bolt"></i>
+            Quick Toggle Test
+        </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <h3 class="loading-title">Analyzing Stock...</h3>
+            <p class="loading-text">This may take up to 30 seconds. Please don't close this page.</p>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const body = document.body;
+            loadingOverlay.classList.add('show');
+            body.classList.add('loading');
+        }
+
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const body = document.body;
+            loadingOverlay.classList.remove('show');
+            body.classList.remove('loading');
+        }
+
+        function testQuickToggle() {
+            // Test rapid show/hide to check for flashing
+            showLoading();
+            setTimeout(() => hideLoading(), 100);
+            setTimeout(() => showLoading(), 200);
+            setTimeout(() => hideLoading(), 300);
+            setTimeout(() => showLoading(), 400);
+            setTimeout(() => hideLoading(), 500);
+        }
+
+        // Auto-hide after 5 seconds for demo
+        function autoHide() {
+            setTimeout(() => {
+                hideLoading();
+            }, 5000);
+        }
+
+        // Show loading on page load for 3 seconds
+        window.addEventListener('load', () => {
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+            }, 3000);
+        });
+    </script>
+</body>
+</html> 

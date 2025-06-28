@@ -245,8 +245,28 @@ async def evaluate_stock(ticker: str, request_headers: Request) -> EvaluationRes
         logger.warning(f"Invalid request for ticker {ticker}: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Error evaluating {ticker}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        error_msg = str(e)
+        logger.error(f"Error evaluating {ticker}: {error_msg}", exc_info=True)
+        
+        # Handle specific API errors with appropriate HTTP status codes
+        if "502 Bad Gateway" in error_msg or "502" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {ticker} - API Error: 502")
+            raise HTTPException(status_code=502, detail="Financial Modeling Prep API is experiencing issues. Please try again later.")
+        elif "503 Service Unavailable" in error_msg or "503" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {ticker} - API Error: 503")
+            raise HTTPException(status_code=503, detail="Financial Modeling Prep API is temporarily unavailable. Please try again later.")
+        elif "401 Unauthorized" in error_msg or "Invalid API key" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {ticker} - API Error: 401")
+            raise HTTPException(status_code=401, detail="Invalid API key for Financial Modeling Prep. Please check your API key.")
+        elif "rate limit" in error_msg.lower() or "429" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {ticker} - API Error: 429")
+            raise HTTPException(status_code=429, detail="API rate limit exceeded. Please try again later.")
+        elif "timeout" in error_msg.lower():
+            logger.error(f"API_ERROR: {request_headers.client.host} - {ticker} - API Error: Timeout")
+            raise HTTPException(status_code=504, detail="Request timed out. Please try again later.")
+        else:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {ticker} - API Error: {error_msg}")
+            raise HTTPException(status_code=500, detail=f"Internal server error: {error_msg}")
 
 @app.post("/evaluate")
 async def evaluate_stock_post(request: EvaluationRequest, request_headers: Request) -> EvaluationResponse:
@@ -281,8 +301,28 @@ async def evaluate_stock_post(request: EvaluationRequest, request_headers: Reque
         logger.warning(f"Invalid POST request for ticker {request.ticker}: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Error evaluating {request.ticker} via POST: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        error_msg = str(e)
+        logger.error(f"Error evaluating {request.ticker} via POST: {error_msg}", exc_info=True)
+        
+        # Handle specific API errors with appropriate HTTP status codes
+        if "502 Bad Gateway" in error_msg or "502" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {request.ticker} - API Error: 502")
+            raise HTTPException(status_code=502, detail="Financial Modeling Prep API is experiencing issues. Please try again later.")
+        elif "503 Service Unavailable" in error_msg or "503" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {request.ticker} - API Error: 503")
+            raise HTTPException(status_code=503, detail="Financial Modeling Prep API is temporarily unavailable. Please try again later.")
+        elif "401 Unauthorized" in error_msg or "Invalid API key" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {request.ticker} - API Error: 401")
+            raise HTTPException(status_code=401, detail="Invalid API key for Financial Modeling Prep. Please check your API key.")
+        elif "rate limit" in error_msg.lower() or "429" in error_msg:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {request.ticker} - API Error: 429")
+            raise HTTPException(status_code=429, detail="API rate limit exceeded. Please try again later.")
+        elif "timeout" in error_msg.lower():
+            logger.error(f"API_ERROR: {request_headers.client.host} - {request.ticker} - API Error: Timeout")
+            raise HTTPException(status_code=504, detail="Request timed out. Please try again later.")
+        else:
+            logger.error(f"API_ERROR: {request_headers.client.host} - {request.ticker} - API Error: {error_msg}")
+            raise HTTPException(status_code=500, detail=f"Internal server error: {error_msg}")
 
 # Metrics endpoint for monitoring
 @app.get("/metrics")

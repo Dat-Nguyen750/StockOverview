@@ -215,10 +215,23 @@ def evaluate():
                 except:
                     pass
                 
-                # Log API errors
-                logger.error(f"API_ERROR: {ip_address} - {ticker} - {error_msg}")
+                # Log API errors with specific status codes
+                logger.error(f"API_ERROR: {ip_address} - {ticker} - API Error: {response.status_code}")
                 
-                flash(error_msg, 'error')
+                # Provide more specific error messages based on status code
+                if response.status_code == 502:
+                    flash('Financial Modeling Prep API is experiencing issues. Please try again later.', 'error')
+                elif response.status_code == 503:
+                    flash('Financial Modeling Prep API is temporarily unavailable. Please try again later.', 'error')
+                elif response.status_code == 401:
+                    flash('Invalid API key for Financial Modeling Prep. Please check your API key.', 'error')
+                elif response.status_code == 429:
+                    flash('API rate limit exceeded. Please try again later.', 'error')
+                elif response.status_code == 504:
+                    flash('Request timed out. Please try again later.', 'error')
+                else:
+                    flash(error_msg, 'error')
+                
                 return render_template('evaluate.html')
                 
         except requests.exceptions.RequestException as e:
@@ -295,7 +308,20 @@ def api_evaluate():
         else:
             error_data = response.json() if response.headers.get('content-type') == 'application/json' else {'detail': 'API Error'}
             logger.error(f"API_EVALUATION_ERROR: {ip_address} - {ticker} - {response.status_code}")
-            return jsonify(error_data), response.status_code
+            
+            # Provide more specific error messages based on status code
+            if response.status_code == 502:
+                return jsonify({'error': 'Financial Modeling Prep API is experiencing issues. Please try again later.'}), 502
+            elif response.status_code == 503:
+                return jsonify({'error': 'Financial Modeling Prep API is temporarily unavailable. Please try again later.'}), 503
+            elif response.status_code == 401:
+                return jsonify({'error': 'Invalid API key for Financial Modeling Prep. Please check your API key.'}), 401
+            elif response.status_code == 429:
+                return jsonify({'error': 'API rate limit exceeded. Please try again later.'}), 429
+            elif response.status_code == 504:
+                return jsonify({'error': 'Request timed out. Please try again later.'}), 504
+            else:
+                return jsonify(error_data), response.status_code
             
     except requests.exceptions.RequestException as e:
         logger.error(f"API_CONNECTION_ERROR: {get_remote_address()} - {ticker} - {str(e)}")
