@@ -37,7 +37,7 @@ limiter = Limiter(
 )
 
 # Configuration
-API_BASE_URL = os.environ.get('API_BASE_URL', 'http://localhost:8000')
+API_BASE_URL = os.environ.get('API_BASE_URL', 'https://stockoverview-1.onrender.com')
 
 # Remove trailing slash if present to avoid double slashes
 if API_BASE_URL.endswith('/'):
@@ -361,6 +361,59 @@ def health():
             return jsonify({'status': 'degraded', 'api': 'error'}), 503
     except:
         return jsonify({'status': 'unhealthy', 'api': 'disconnected'}), 503
+
+@app.route('/test-connection')
+def test_connection():
+    """Test connection to backend API"""
+    try:
+        logger.info(f"Testing connection to backend at: {API_BASE_URL}")
+        
+        # Test basic connectivity
+        response = requests.get(f"{API_BASE_URL}/health", timeout=10)
+        
+        if response.status_code == 200:
+            return jsonify({
+                'status': 'success',
+                'backend_url': API_BASE_URL,
+                'response_time': response.elapsed.total_seconds(),
+                'backend_status': 'connected'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'backend_url': API_BASE_URL,
+                'response_code': response.status_code,
+                'backend_status': 'responding_but_error'
+            }), 503
+            
+    except requests.exceptions.Timeout:
+        logger.error(f"Backend connection timeout: {API_BASE_URL}")
+        return jsonify({
+            'status': 'error',
+            'backend_url': API_BASE_URL,
+            'error': 'timeout',
+            'backend_status': 'timeout'
+        }), 504
+        
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Backend connection error: {API_BASE_URL} - {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'backend_url': API_BASE_URL,
+            'error': 'connection_error',
+            'backend_status': 'unreachable',
+            'details': str(e)
+        }), 503
+        
+    except Exception as e:
+        logger.error(f"Backend test error: {API_BASE_URL} - {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'backend_url': API_BASE_URL,
+            'error': 'unknown',
+            'backend_status': 'unknown',
+            'details': str(e)
+        }), 500
 
 @app.route('/admin/security')
 def security_dashboard():
