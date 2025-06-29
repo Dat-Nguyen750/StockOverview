@@ -146,4 +146,40 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Track page view for landing page
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'page_view', {
+            page_title: 'Landing Page',
+            page_location: window.location.href
+        });
+    }
+});
+
+// Track "Start Analysis" button clicks
+document.querySelectorAll('a[href="{{ url_for("evaluate") }}"]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'cta_click', {
+                event_category: 'engagement',
+                event_label: 'start_analysis_landing'
+            });
+        }
+    });
+});
+
+// Track "Launch Analysis" button clicks
+document.querySelector('a[href="{{ url_for("evaluate") }}"]:last-child').addEventListener('click', function() {
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'cta_click', {
+            event_category: 'engagement',
+            event_label: 'launch_analysis_landing'
+        });
+    }
+});
+</script>
 {% endblock %} 

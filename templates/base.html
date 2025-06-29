@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StockOverview - AI-Powered Stock Analysis{% endblock %}</title>
     
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9M0014TX5C"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-9M0014TX5C');
+    </script>
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -281,6 +290,163 @@
             border: 1px solid rgba(6, 182, 212, 0.2);
         }
         
+        /* Floating Feedback Button */
+        .floating-feedback-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .floating-feedback-btn:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.6);
+            background: linear-gradient(135deg, #d97706, #b45309);
+        }
+
+        .floating-feedback-btn:active {
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+            }
+            50% {
+                box-shadow: 0 8px 25px rgba(245, 158, 11, 0.6), 0 0 0 10px rgba(245, 158, 11, 0.1);
+            }
+            100% {
+                box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+            }
+        }
+
+        /* Feedback Modal */
+        .feedback-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .feedback-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .feedback-modal-content {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .feedback-modal.show .feedback-modal-content {
+            transform: scale(1);
+        }
+
+        .feedback-modal-header {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        }
+
+        .feedback-modal-title {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .feedback-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .feedback-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .feedback-modal-body {
+            padding: 0;
+            height: 70vh;
+            overflow: hidden;
+        }
+
+        .feedback-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .floating-feedback-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 55px;
+                height: 55px;
+                font-size: 1.25rem;
+            }
+
+            .feedback-modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .feedback-modal-body {
+                height: 75vh;
+            }
+        }
+        
         {% block extra_css %}{% endblock %}
     </style>
 </head>
@@ -343,6 +509,144 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Floating Feedback Button -->
+    <div class="floating-feedback-btn" onclick="openFeedbackModal()" title="Share your feedback!">
+        <i class="fas fa-comment-dots"></i>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="feedback-modal" id="feedbackModal">
+        <div class="feedback-modal-content">
+            <div class="feedback-modal-header">
+                <h3 class="feedback-modal-title">
+                    <i class="fas fa-star"></i>
+                    We'd love your feedback!
+                </h3>
+                <button class="feedback-modal-close" onclick="closeFeedbackModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="feedback-modal-body">
+                <iframe 
+                    src="https://tally.so/embed/w4YvLr?alignLeft=1&transparentBackground=1&dynamicHeight=1" 
+                    class="feedback-iframe"
+                    title="Feedback Form">
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal JavaScript -->
+    <script>
+        function openFeedbackModal() {
+            const modal = document.getElementById('feedbackModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFeedbackModal() {
+            const modal = document.getElementById('feedbackModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('feedbackModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFeedbackModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFeedbackModal();
+            }
+        });
+
+        // Google Analytics Event Tracking
+        function trackEvent(eventName, eventCategory, eventLabel) {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', eventName, {
+                    event_category: eventCategory,
+                    event_label: eventLabel
+                });
+            }
+        }
+
+        // Track feedback button clicks
+        document.querySelector('.floating-feedback-btn').addEventListener('click', function() {
+            trackEvent('feedback_button_click', 'engagement', 'floating_feedback');
+        });
+
+        // Track feedback form submissions (if possible)
+        const feedbackIframe = document.querySelector('.feedback-iframe');
+        if (feedbackIframe) {
+            feedbackIframe.addEventListener('load', function() {
+                // Track when feedback form loads
+                trackEvent('feedback_form_load', 'engagement', 'tally_form');
+            });
+        }
+
+        // Track page views for all pages
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gtag !== 'undefined') {
+                const pageTitle = document.title;
+                const pagePath = window.location.pathname;
+                
+                // Generate or retrieve unique user ID
+                let userId = sessionStorage.getItem('stockoverview_user_id');
+                if (!userId) {
+                    userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    sessionStorage.setItem('stockoverview_user_id', userId);
+                }
+                
+                // Track user session
+                gtag('config', 'G-9M0014TX5C', {
+                    user_id: userId,
+                    custom_map: {
+                        'user_id': 'user_id'
+                    }
+                });
+                
+                gtag('event', 'page_view', {
+                    page_title: pageTitle,
+                    page_location: window.location.href,
+                    page_path: pagePath,
+                    user_id: userId
+                });
+                
+                // Track specific page types
+                if (pagePath === '/') {
+                    gtag('event', 'landing_page_view', {
+                        event_category: 'page_view',
+                        event_label: 'homepage',
+                        user_id: userId
+                    });
+                } else if (pagePath === '/evaluate') {
+                    gtag('event', 'evaluate_page_view', {
+                        event_category: 'page_view',
+                        event_label: 'analysis_form',
+                        user_id: userId
+                    });
+                } else if (pagePath.includes('/result/')) {
+                    gtag('event', 'result_page_view', {
+                        event_category: 'page_view',
+                        event_label: 'analysis_results',
+                        user_id: userId
+                    });
+                }
+                
+                // Track user session start
+                gtag('event', 'user_session_start', {
+                    event_category: 'user_behavior',
+                    event_label: 'session_begin',
+                    user_id: userId
+                });
+            }
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
