@@ -261,6 +261,7 @@ class DataFetcher:
         """Search for recent company news using SERP API"""
         api_key = serp_api_key or self.serp_api_key
         if not api_key:
+            logger.warning("No SERP API key provided for news search")
             return []
         
         query = f"{company_name} {ticker} stock news"
@@ -272,20 +273,80 @@ class DataFetcher:
             "tbm": "nws"  # News search
         }
         
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(self.serp_base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                return data.get("news_results", [])
-        except Exception as e:
-            print(f"Error fetching news: {e}")
-            return []
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(self.serp_base_url, params=params)
+                    
+                    # Handle specific error codes
+                    if response.status_code == 429:
+                        logger.warning(f"SERP API rate limit exceeded (429) on attempt {attempt + 1}/{max_retries}")
+                        if attempt < max_retries - 1:
+                            wait_time = 60 * (attempt + 1)  # Wait 60s, 120s, 180s
+                            logger.info(f"Waiting {wait_time} seconds before retry for SERP API")
+                            await asyncio.sleep(wait_time)
+                            continue
+                        else:
+                            logger.error("SERP API rate limit exceeded after all retries")
+                            return []
+                    
+                    if response.status_code == 401:
+                        logger.error("Invalid SERP API key")
+                        return []
+                    
+                    if response.status_code == 403:
+                        logger.error("SERP API key does not have permission")
+                        return []
+                    
+                    response.raise_for_status()
+                    data = response.json()
+                    news_results = data.get("news_results", [])
+                    
+                    if news_results:
+                        logger.info(f"Successfully fetched {len(news_results)} news articles for {ticker}")
+                        return news_results
+                    else:
+                        logger.warning(f"No news results found for {ticker}")
+                        return []
+                        
+            except httpx.HTTPStatusError as e:
+                logger.error(f"SERP API HTTP error {e.response.status_code}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 10 * (attempt + 1)
+                    logger.info(f"Waiting {wait_time} seconds before retry for SERP API")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    return []
+                    
+            except httpx.TimeoutException as e:
+                logger.error(f"SERP API timeout error: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.info(f"Waiting {wait_time} seconds before retry for SERP API timeout")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    return []
+                    
+            except Exception as e:
+                logger.error(f"SERP API error: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.info(f"Waiting {wait_time} seconds before retry for SERP API error")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    return []
+        
+        return []
 
     async def search_company_info(self, company_name: str, query_type: str, serp_api_key: str = None) -> List[Dict]:
         """Search for specific company information"""
         api_key = serp_api_key or self.serp_api_key
         if not api_key:
+            logger.warning("No SERP API key provided for company info search")
             return []
         
         query_map = {
@@ -303,12 +364,71 @@ class DataFetcher:
             "num": 5
         }
         
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(self.serp_base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                return data.get("organic_results", [])
-        except Exception as e:
-            print(f"Error fetching {query_type} info: {e}")
-            return []
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(self.serp_base_url, params=params)
+                    
+                    # Handle specific error codes
+                    if response.status_code == 429:
+                        logger.warning(f"SERP API rate limit exceeded (429) for {query_type} on attempt {attempt + 1}/{max_retries}")
+                        if attempt < max_retries - 1:
+                            wait_time = 60 * (attempt + 1)  # Wait 60s, 120s, 180s
+                            logger.info(f"Waiting {wait_time} seconds before retry for SERP API {query_type}")
+                            await asyncio.sleep(wait_time)
+                            continue
+                        else:
+                            logger.error(f"SERP API rate limit exceeded for {query_type} after all retries")
+                            return []
+                    
+                    if response.status_code == 401:
+                        logger.error("Invalid SERP API key")
+                        return []
+                    
+                    if response.status_code == 403:
+                        logger.error("SERP API key does not have permission")
+                        return []
+                    
+                    response.raise_for_status()
+                    data = response.json()
+                    organic_results = data.get("organic_results", [])
+                    
+                    if organic_results:
+                        logger.info(f"Successfully fetched {len(organic_results)} results for {query_type}")
+                        return organic_results
+                    else:
+                        logger.warning(f"No results found for {query_type}")
+                        return []
+                        
+            except httpx.HTTPStatusError as e:
+                logger.error(f"SERP API HTTP error {e.response.status_code} for {query_type}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 10 * (attempt + 1)
+                    logger.info(f"Waiting {wait_time} seconds before retry for SERP API {query_type}")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    return []
+                    
+            except httpx.TimeoutException as e:
+                logger.error(f"SERP API timeout error for {query_type}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.info(f"Waiting {wait_time} seconds before retry for SERP API {query_type} timeout")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    return []
+                    
+            except Exception as e:
+                logger.error(f"SERP API error for {query_type}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.info(f"Waiting {wait_time} seconds before retry for SERP API {query_type} error")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    return []
+        
+        return []

@@ -197,7 +197,7 @@ def evaluate():
                     'X-SERP-API-Key': serp_key,
                     'X-GEMINI-API-Key': gemini_key
                 },
-                timeout=60
+                timeout=120  # Increased timeout for Render cold start
             )
             
             if response.status_code == 200:
@@ -298,7 +298,7 @@ def api_evaluate():
                 'X-SERP-API-Key': serp_key,
                 'X-GEMINI-API-Key': gemini_key
             },
-            timeout=60
+            timeout=120  # Increased timeout for Render cold start
         )
         
         if response.status_code == 200:
@@ -361,6 +361,32 @@ def health():
             return jsonify({'status': 'degraded', 'api': 'error'}), 503
     except:
         return jsonify({'status': 'unhealthy', 'api': 'disconnected'}), 503
+
+@app.route('/warmup')
+def warmup():
+    """Warm up the application to reduce cold start delays"""
+    try:
+        # Test backend connection
+        response = requests.get(f"{API_BASE_URL}/health", timeout=10)
+        if response.status_code == 200:
+            return jsonify({
+                'status': 'warmed_up',
+                'backend': 'connected',
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                'status': 'warmed_up',
+                'backend': 'error',
+                'timestamp': datetime.now().isoformat()
+            })
+    except Exception as e:
+        return jsonify({
+            'status': 'warmed_up',
+            'backend': 'unreachable',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        })
 
 @app.route('/test-connection')
 def test_connection():
