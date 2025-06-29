@@ -67,26 +67,30 @@ class StockEvaluator:
             self.scorer.weights.update(custom_weights)
         
         try:
-            # Step 1: Gather all data concurrently
+            # Initialize API warnings tracking
+            api_warnings = {}
             
-            # Basic company data
+            # Step 1: Fetch data from APIs
+            print(f"[DEBUG] Fetching data for {ticker}...")
+            
+            # Company profile and financial data
             company_profile = await self.data_fetcher.get_company_profile(ticker, api_key=fmp_api_key)
-            if not company_profile:
-                raise ValueError(f"Company profile not found for ticker {ticker}")
+            statements = await self.data_fetcher.get_financial_statements(ticker, api_key=fmp_api_key)
+            ratios = await self.data_fetcher.get_financial_ratios(ticker, api_key=fmp_api_key)
+            metrics = await self.data_fetcher.get_key_metrics(ticker, api_key=fmp_api_key)
+            insider_trading = await self.data_fetcher.get_insider_trading(ticker, api_key=fmp_api_key)
             
-            # Financial data
-            financial_data_tasks = [
-                self.data_fetcher.get_financial_statements(ticker, api_key=fmp_api_key),
-                self.data_fetcher.get_key_metrics(ticker, api_key=fmp_api_key),
-                self.data_fetcher.get_financial_ratios(ticker, api_key=fmp_api_key),
-                self.data_fetcher.get_insider_trading(ticker, api_key=fmp_api_key)
-            ]
-            
-            statements, metrics, ratios, insider_trading = await asyncio.gather(*financial_data_tasks)
+            # Check for FMP API issues
+            if not company_profile or not statements or not ratios or not metrics:
+                api_warnings['fmp'] = "API quota exceeded or service unavailable"
             
             # News and additional data
             company_name = company_profile.get('companyName', ticker)
             news_data = await self.data_fetcher.search_company_news(company_name, ticker, serp_api_key=serp_api_key)
+            
+            # Check for SERP API issues
+            if not news_data:
+                api_warnings['serp'] = "API quota exceeded or service unavailable"
             
             # Step 2: Calculate rule-based scores
             
@@ -117,6 +121,20 @@ class StockEvaluator:
             print("\n[DEBUG] Raw LLM business_analysis:", business_analysis)
             print("[DEBUG] Raw LLM tam_analysis:", tam_analysis)
             print("[DEBUG] Raw LLM sentiment_analysis:", sentiment_analysis)
+
+            # Check for Gemini API issues
+            if (not business_analysis or not isinstance(business_analysis, dict) or 
+                business_analysis.get('analysis', {}).get('revenue_model') == 'Analysis unavailable - Invalid API key' or
+                business_analysis.get('analysis', {}).get('revenue_model') == 'Analysis unavailable - API quota exceeded'):
+                api_warnings['gemini'] = "API quota exceeded or invalid API key"
+            elif (not tam_analysis or not isinstance(tam_analysis, dict) or
+                  tam_analysis.get('analysis', {}).get('tam_assessment') == 'Analysis unavailable - Invalid API key' or
+                  tam_analysis.get('analysis', {}).get('tam_assessment') == 'Analysis unavailable - API quota exceeded'):
+                api_warnings['gemini'] = "API quota exceeded or invalid API key"
+            elif (not sentiment_analysis or not isinstance(sentiment_analysis, dict) or
+                  sentiment_analysis.get('analysis', {}).get('sentiment_summary') == 'Analysis unavailable - Invalid API key' or
+                  sentiment_analysis.get('analysis', {}).get('sentiment_summary') == 'Analysis unavailable - API quota exceeded'):
+                api_warnings['gemini'] = "API quota exceeded or invalid API key"
 
             # Ensure all LLM results are dicts
             def ensure_dict(obj, fallback, label=None):
@@ -219,17 +237,23 @@ class StockEvaluator:
                 
                 Focus on the most important strengths, weaknesses, and the overall investment outlook.
                 """
-                summary_response = self.llm_orchestrator.model.generate_content(summary_prompt)
-                print("[DEBUG] Raw LLM summary response:", summary_response)
-                # Try to extract the summary text robustly
-                if hasattr(summary_response, 'text'):
-                    general_summary = summary_response.text.strip()
-                elif hasattr(summary_response, 'result') and hasattr(summary_response.result, 'text'):
-                    general_summary = summary_response.result.text.strip()
+                
+                # Get the model using the correct method
+                model = self.llm_orchestrator._get_model(gemini_api_key)
+                if model:
+                    summary_response = model.generate_content(summary_prompt)
+                    print("[DEBUG] Raw LLM summary response:", summary_response)
+                    # Try to extract the summary text robustly
+                    if hasattr(summary_response, 'text'):
+                        general_summary = summary_response.text.strip()
+                    elif hasattr(summary_response, 'result') and hasattr(summary_response.result, 'text'):
+                        general_summary = summary_response.result.text.strip()
+                    else:
+                        general_summary = str(summary_response).strip()
+                    if not general_summary:
+                        general_summary = "Summary unavailable."
                 else:
-                    general_summary = str(summary_response).strip()
-                if not general_summary:
-                    general_summary = "Summary unavailable."
+                    general_summary = "Summary unavailable - No valid API key provided."
             except Exception as e:
                 print("Error generating summary:", e)
                 general_summary = "Summary unavailable."
@@ -249,7 +273,8 @@ class StockEvaluator:
                 "general_summary": general_summary,
                 "evaluation_timestamp": datetime.now().isoformat(),
                 "data_sources": ["Financial Modeling Prep", "Google Gemini", "SERP API"],
-                "data_freshness": data_freshness
+                "data_freshness": data_freshness,
+                "api_warnings": api_warnings
             }
             
             # Add detailed analysis if requested
