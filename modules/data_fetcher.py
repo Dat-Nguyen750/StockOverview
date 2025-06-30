@@ -189,6 +189,10 @@ class DataFetcher:
         data = await self._rate_limited_request(url, params, api_key=api_key)
         if data and isinstance(data, list) and len(data) > 0:
             profile = data[0]
+            
+            # Validate and fix market cap data
+            profile = await self._validate_and_fix_market_cap(profile, ticker, api_key)
+            
             # If market cap or companyName is missing, mark as fallback
             if not profile.get('mktCap') or not profile.get('companyName'):
                 profile['profile_freshness'] = 'fallback'
@@ -198,6 +202,90 @@ class DataFetcher:
         else:
             # Return a fallback profile
             return {'profile_freshness': 'fallback'}
+
+    async def _validate_and_fix_market_cap(self, profile: Dict[str, Any], ticker: str, api_key: str = None) -> Dict[str, Any]:
+        """Validate and fix market cap data when shares outstanding is missing or zero"""
+        try:
+            # Check if shares outstanding is missing or zero
+            shares_outstanding = profile.get('sharesOutstanding', 0)
+            reported_mkt_cap = profile.get('mktCap', 0)
+            price = profile.get('price', 0)
+            
+            # If shares outstanding is zero but we have price and market cap, calculate shares
+            if shares_outstanding == 0 and price > 0 and reported_mkt_cap > 0:
+                calculated_shares = reported_mkt_cap / price
+                profile['sharesOutstanding'] = calculated_shares
+                profile['shares_calculated'] = True
+                logger.info(f"Calculated shares outstanding for {ticker}: {calculated_shares:,.0f}")
+            
+            # If we have price and shares but market cap seems wrong, recalculate
+            elif shares_outstanding > 0 and price > 0:
+                calculated_mkt_cap = price * shares_outstanding
+                discrepancy = abs(reported_mkt_cap - calculated_mkt_cap)
+                discrepancy_percent = (discrepancy / reported_mkt_cap) * 100 if reported_mkt_cap > 0 else 0
+                
+                # If discrepancy is more than 5%, use calculated value
+                if discrepancy_percent > 5:
+                    profile['mktCap'] = calculated_mkt_cap
+                    profile['mkt_cap_calculated'] = True
+                    logger.info(f"Recalculated market cap for {ticker}: ${calculated_mkt_cap:,.0f} (was ${reported_mkt_cap:,.0f})")
+            
+            # Try to get real-time quote data as fallback
+            if shares_outstanding == 0 or price == 0:
+                quote_data = await self._get_real_time_quote(ticker, api_key)
+                if quote_data:
+                    if shares_outstanding == 0 and quote_data.get('marketCap', 0) > 0 and quote_data.get('price', 0) > 0:
+                        calculated_shares = quote_data['marketCap'] / quote_data['price']
+                        profile['sharesOutstanding'] = calculated_shares
+                        profile['shares_calculated'] = True
+                        logger.info(f"Used quote data to calculate shares for {ticker}: {calculated_shares:,.0f}")
+                    
+                    if price == 0 and quote_data.get('price', 0) > 0:
+                        profile['price'] = quote_data['price']
+                        profile['price_from_quote'] = True
+                        logger.info(f"Used quote data for price for {ticker}: ${quote_data['price']:.2f}")
+            
+            # Final validation - if we still don't have proper data, try key metrics
+            if shares_outstanding == 0 or reported_mkt_cap == 0:
+                metrics_data = await self._get_key_metrics_fallback(ticker, api_key)
+                if metrics_data:
+                    if reported_mkt_cap == 0 and metrics_data.get('marketCap', 0) > 0:
+                        profile['mktCap'] = metrics_data['marketCap']
+                        profile['mkt_cap_from_metrics'] = True
+                        logger.info(f"Used key metrics for market cap for {ticker}: ${metrics_data['marketCap']:,.0f}")
+            
+        except Exception as e:
+            logger.error(f"Error validating market cap for {ticker}: {e}")
+        
+        return profile
+
+    async def _get_real_time_quote(self, ticker: str, api_key: str = None) -> Dict[str, Any]:
+        """Get real-time quote data as fallback"""
+        try:
+            url = f"{self.fmp_base_url}/quote/{ticker}"
+            params = {"apikey": api_key or self.fmp_api_key}
+            
+            data = await self._rate_limited_request(url, params, api_key=api_key)
+            if data and isinstance(data, list) and len(data) > 0:
+                return data[0]
+        except Exception as e:
+            logger.error(f"Error getting real-time quote for {ticker}: {e}")
+        
+        return {}
+
+    async def _get_key_metrics_fallback(self, ticker: str, api_key: str = None) -> Dict[str, Any]:
+        """Get key metrics as fallback for market cap"""
+        try:
+            url = f"{self.fmp_base_url}/key-metrics/{ticker}"
+            params = {"limit": 1, "apikey": api_key or self.fmp_api_key}
+            
+            data = await self._rate_limited_request(url, params, api_key=api_key)
+            if data and isinstance(data, list) and len(data) > 0:
+                return data[0]
+        except Exception as e:
+            logger.error(f"Error getting key metrics for {ticker}: {e}")
+        
+        return {}
 
     async def get_financial_statements(self, ticker: str, years: int = 5, api_key: str = None) -> Dict[str, List]:
         """Get income statement, balance sheet, and cash flow data"""

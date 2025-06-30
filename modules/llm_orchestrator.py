@@ -475,11 +475,15 @@ class LLMOrchestrator:
                 "upside_percentage": 0,
                 "confidence_level": "low",
                 "key_assumptions": ["Analysis unavailable - No API key provided"],
-                "analysis": "Analysis unavailable - No API key provided"
+                "analysis": "Analysis unavailable - No API key provided",
+                "data_notes": self._get_data_freshness_notes(company_profile)
             }
         
         latest_income = statements.get("income", [{}])[0] if statements.get("income") else {}
         latest_cashflow = statements.get("cashflow", [{}])[0] if statements.get("cashflow") else {}
+        
+        # Get data freshness notes
+        data_notes = self._get_data_freshness_notes(company_profile)
         
         prompt = f"""
         Perform a simplified DCF (Discounted Cash Flow) valuation for {company_profile.get('companyName', 'this company')}:
@@ -489,6 +493,8 @@ class LLMOrchestrator:
         - Free Cash Flow: ${latest_cashflow.get('freeCashFlow', 0):,.0f}
         - Market Cap: ${company_profile.get('mktCap', 0):,.0f}
         - Industry: {company_profile.get('industry', 'N/A')}
+        
+        Data Notes: {data_notes}
         
         Please provide:
         1. Estimated fair value range
@@ -502,7 +508,8 @@ class LLMOrchestrator:
             "upside_percentage": <upside_percent>,
             "confidence_level": "<high/medium/low>",
             "key_assumptions": ["<assumption1>", "<assumption2>"],
-            "analysis": "<brief DCF analysis>"
+            "analysis": "<brief DCF analysis>",
+            "data_notes": "<data freshness and validation notes>"
         }}
         """
         
@@ -514,7 +521,9 @@ class LLMOrchestrator:
             elif json_str.startswith('```'):
                 json_str = json_str[3:-3]
             
-            return json.loads(json_str)
+            result = json.loads(json_str)
+            result['data_notes'] = data_notes
+            return result
         except Exception as e:
             return {
                 "estimated_fair_value": company_profile.get('mktCap', 0),
@@ -522,5 +531,43 @@ class LLMOrchestrator:
                 "upside_percentage": 0,
                 "confidence_level": "low",
                 "key_assumptions": ["Analysis unavailable"],
-                "analysis": "DCF analysis unavailable"
+                "analysis": "DCF analysis unavailable",
+                "data_notes": data_notes
             }
+
+    def _get_data_freshness_notes(self, company_profile: Dict) -> str:
+        """Generate data freshness and validation notes"""
+        notes = []
+        
+        # Check for calculated/fallback data
+        if company_profile.get('shares_calculated'):
+            notes.append("Shares outstanding was calculated from market cap and price")
+        
+        if company_profile.get('mkt_cap_calculated'):
+            notes.append("Market cap was recalculated due to data discrepancy")
+        
+        if company_profile.get('mkt_cap_from_metrics'):
+            notes.append("Market cap sourced from key metrics endpoint")
+        
+        if company_profile.get('price_from_quote'):
+            notes.append("Price sourced from real-time quote")
+        
+        # Check profile freshness
+        if company_profile.get('profile_freshness') == 'fallback':
+            notes.append("Using fallback profile data")
+        
+        # Check for missing critical data
+        if not company_profile.get('sharesOutstanding'):
+            notes.append("Shares outstanding data unavailable")
+        
+        if not company_profile.get('mktCap'):
+            notes.append("Market cap data unavailable")
+        
+        if not company_profile.get('price'):
+            notes.append("Price data unavailable")
+        
+        # Add timestamp if available
+        if company_profile.get('lastUpdated'):
+            notes.append(f"Last updated: {company_profile['lastUpdated']}")
+        
+        return "; ".join(notes) if notes else "All data appears fresh and validated"
